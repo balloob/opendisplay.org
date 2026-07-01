@@ -3731,12 +3731,17 @@ class OpenDisplayBLE {
       const uncompressedSize = byteData.length;
       const byteDataUint8 = new Uint8Array(byteData);
       
-      const supportsZip = transmissionModes !== null && transmissionModes !== undefined &&
+      let supportsZip = transmissionModes !== null && transmissionModes !== undefined &&
                           (transmissionModes & TRANSMISSION_MODE_ZIP) !== 0;
       const supportsStreamingDecompression = transmissionModes !== null && transmissionModes !== undefined &&
         (transmissionModes & TRANSMISSION_MODE_STREAMING_DECOMPRESSION) !== 0;
+        
+      // Forcing the flag
+if (supportsStreamingDecompression) {
+  supportsZip = true; 
+}
       const supportsCompression = supportsZip && supportsStreamingDecompression;
-
+      
       let compressedBytes = null;
       if (supportsCompression && typeof pako !== 'undefined') {
         try {

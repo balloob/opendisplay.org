@@ -69,7 +69,7 @@
             "firmwareLetter": "O",
             "githubRepo": "https://github.com/OpenDisplay/Firmware"
          },
-         "transmission_modes": "10",
+         "transmission_modes": "9",
          "index": 1
       },
       {
@@ -141,7 +141,7 @@
             "firmwareLetter": "O",
             "githubRepo": "https://github.com/OpenDisplay/Firmware"
          },
-         "transmission_modes": "10",
+         "transmission_modes": "9",
          "index": 2
       },
       {
@@ -212,7 +212,7 @@
             "firmwareLetter": "O",
             "githubRepo": "https://github.com/OpenDisplay/Firmware"
          },
-         "transmission_modes": "10",
+         "transmission_modes": "9",
          "index": 3
       },
       {
@@ -283,7 +283,7 @@
             "firmwareLetter": "O",
             "githubRepo": "https://github.com/OpenDisplay/Firmware"
          },
-         "transmission_modes": "10",
+         "transmission_modes": "9",
          "index": 4
       },
       {
@@ -374,7 +374,7 @@
             "firmwareLetter": "O",
             "githubRepo": "https://github.com/OpenDisplay/Firmware"
          },
-         "transmission_modes": "10",
+         "transmission_modes": "9",
          "index": 5
       },
       {
@@ -466,7 +466,7 @@
             "firmwareLetter": "O",
             "githubRepo": "https://github.com/OpenDisplay/Firmware"
          },
-         "transmission_modes": "10",
+         "transmission_modes": "9",
          "index": 6
       },
       {
@@ -577,7 +577,7 @@
             "firmwareLetter": "O",
             "githubRepo": "https://github.com/OpenDisplay/Firmware"
          },
-         "transmission_modes": "11",
+         "transmission_modes": "9",
          "index": 7
       },
       {
@@ -726,7 +726,7 @@
             "firmwareLetter": "O",
             "githubRepo": "https://github.com/OpenDisplay/Firmware"
          },
-         "transmission_modes": "11",
+         "transmission_modes": "9",
          "index": 20
       },
       {
@@ -766,7 +766,7 @@
             "firmwareLetter": "O",
             "githubRepo": "https://github.com/OpenDisplay/Firmware"
          },
-         "transmission_modes": "11",
+         "transmission_modes": "9",
          "index": 8
       },
       {
@@ -817,7 +817,7 @@
             "firmwareLetter": "O",
             "githubRepo": "https://github.com/OpenDisplay/Firmware"
          },
-         "transmission_modes": "10",
+         "transmission_modes": "9",
          "index": 9
       },
       {
@@ -868,7 +868,7 @@
             "firmwareLetter": "O",
             "githubRepo": "https://github.com/OpenDisplay/Firmware"
          },
-         "transmission_modes": "10",
+         "transmission_modes": "9",
          "index": 10
       },
       {
@@ -909,7 +909,7 @@
             "firmwareLetter": "O",
             "githubRepo": "https://github.com/OpenDisplay/Firmware"
          },
-         "transmission_modes": "10",
+         "transmission_modes": "9",
          "index": 11
       },
       {
@@ -950,7 +950,7 @@
             "firmwareLetter": "O",
             "githubRepo": "https://github.com/OpenDisplay/Firmware"
          },
-         "transmission_modes": "10",
+         "transmission_modes": "9",
          "index": 12
       },
       {
@@ -991,7 +991,7 @@
             "firmwareLetter": "O",
             "githubRepo": "https://github.com/OpenDisplay/Firmware"
          },
-         "transmission_modes": "10",
+         "transmission_modes": "9",
          "index": 13
       },
       {
@@ -1229,7 +1229,7 @@
             "mode": "0x0",
             "reserved": "0000000000000000000000000000000000000000"
          },
-         "transmission_modes": "11",
+         "transmission_modes": "9",
          "installConfig": {
             "firmwareLetter": "S",
             "githubRepo": "https://github.com/OpenDisplay/Firmware_Silabs",
@@ -1332,7 +1332,7 @@
             "mode": "0x0",
             "reserved": "0000000000000000000000000000000000000000"
          },
-         "transmission_modes": "11",
+         "transmission_modes": "9",
          "installConfig": {
             "firmwareLetter": "S",
             "githubRepo": "https://github.com/OpenDisplay/Firmware_Silabs",
@@ -1403,7 +1403,7 @@
             "firmwareLetter": "O",
             "githubRepo": "https://github.com/OpenDisplay/Firmware"
          },
-         "transmission_modes": "10",
+         "transmission_modes": "9",
          "index": 18
       },
       {
@@ -1449,7 +1449,7 @@
     "firmwareLetter": "O",
     "githubRepo": "https://github.com/OpenDisplay/Firmware"
   },
-  "transmission_modes": "10",
+  "transmission_modes": "9",
   "index": 19
 }
    ],
