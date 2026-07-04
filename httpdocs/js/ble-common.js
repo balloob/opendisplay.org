@@ -14,6 +14,10 @@ const OPENDISPLAY_BLE_SERVICE_UUID = '00002446-0000-1000-8000-00805f9b34fb';
 // in the advertising packet (especially ESP32), but MSD is usually present.
 const OPENDISPLAY_MSD_COMPANY_ID = 0x2446;
 
+// Timeout (ms) to wait for each config-write ack (0x41/0x42) from the device.
+// The firmware acks every chunk, so this bounds a dead connection per expected reply.
+const CONFIG_WRITE_ACK_TIMEOUT_MS = 8000;
+
 function normalizeBluetoothUuid(uuid) {
   if (uuid == null || uuid === '') return OPENDISPLAY_BLE_SERVICE_UUID;
   if (typeof uuid === 'string') {
@@ -122,7 +126,12 @@ class OpenDisplayBLE {
     
     this.configWriteState = {
       active: false,
-      onComplete: null
+      onComplete: null,
+      // Per-chunk ack waiter: settled by handleConfigWriteNotification.
+      expectedCommand: null,
+      ackResolve: null,
+      ackReject: null,
+      timeoutId: null
     };
     
     // Encryption session state
@@ -1869,36 +1878,115 @@ class OpenDisplayBLE {
     return false;
   }
   
+  _clearConfigWriteTimer() {
+    if (this.configWriteState.timeoutId) {
+      clearTimeout(this.configWriteState.timeoutId);
+      this.configWriteState.timeoutId = null;
+    }
+  }
+
+  _resetConfigWriteAckWaiter() {
+    this.configWriteState.expectedCommand = null;
+    this.configWriteState.ackResolve = null;
+    this.configWriteState.ackReject = null;
+  }
+
   /**
-   * Handle config write notifications (built-in handler)
+   * Arm a promise that settles when the next config-write ack arrives.
+   * Must be called BEFORE sending the chunk so a fast notification can't be
+   * dropped while sendHexCommand's own await is still in flight.
+   */
+  _awaitConfigWriteAck(expectedCommand) {
+    return new Promise((resolve, reject) => {
+      this._clearConfigWriteTimer();
+      this.configWriteState.expectedCommand = expectedCommand;
+      this.configWriteState.ackResolve = resolve;
+      this.configWriteState.ackReject = reject;
+      this.configWriteState.timeoutId = setTimeout(() => {
+        const rej = this.configWriteState.ackReject;
+        this._resetConfigWriteAckWaiter();
+        this.configWriteState.timeoutId = null;
+        if (rej) {
+          rej(new Error(`Config write ack timeout (command 0x${expectedCommand.toString(16)})`));
+        }
+      }, CONFIG_WRITE_ACK_TIMEOUT_MS);
+    });
+  }
+
+  /**
+   * Set up config-write state for a new transfer.
+   */
+  _beginConfigWrite(onComplete) {
+    this._clearConfigWriteTimer();
+    this.configWriteState.active = true;
+    this.configWriteState.onComplete = onComplete || null;
+    this._resetConfigWriteAckWaiter();
+  }
+
+  /**
+   * Tear down config-write state and fire the optional callback.
+   * onComplete convention: called with null on success, Error on failure.
+   */
+  _finishConfigWrite(err) {
+    this._clearConfigWriteTimer();
+    this._resetConfigWriteAckWaiter();
+    this.configWriteState.active = false;
+    const cb = this.configWriteState.onComplete;
+    this.configWriteState.onComplete = null;
+    if (cb) cb(err || null);
+  }
+
+  /**
+   * Handle config write notifications (built-in handler).
+   *
+   * Matches the real firmware replies (communication.cpp): single-write / first
+   * chunk uses command 0x41, subsequent/final chunks use command 0x42. Each ack
+   * is 0x00 <cmd> 0x00 0x00 (ok) or 0xFF <cmd> 0x00 0x00 (error); the final 0x42
+   * ack is the overall save result. A 3-byte 0x00 <cmd> 0xFE reply means auth is
+   * required. Settles the pending ack waiter armed by _awaitConfigWriteAck.
    */
   handleConfigWriteNotification(bytes) {
     if (bytes.length < 2) return false;
-    
+
     const responseType = bytes[0];
     const command = bytes[1];
-    
-    // Config write ACK (0x00 0xCE)
-    if (responseType === 0x00 && command === 0xCE) {
-      this.log('Config write successful', 'success');
-      this.configWriteState.active = false;
-      if (this.configWriteState.onComplete) {
-        this.configWriteState.onComplete(null);
-      }
+
+    // Only 0x41 (single/first chunk) and 0x42 (subsequent/final chunk) are acks.
+    if (command !== 0x41 && command !== 0x42) return false;
+
+    const resolve = this.configWriteState.ackResolve;
+    const reject = this.configWriteState.ackReject;
+    // No pending waiter — stray or duplicate ack, let it fall through to logging.
+    if (!resolve && !reject) return false;
+
+    this._clearConfigWriteTimer();
+    this._resetConfigWriteAckWaiter();
+
+    // Authentication required (0x00 0x41 0xFE / 0x00 0x42 0xFE) — 3-byte reply.
+    if (bytes.length >= 3 && bytes[2] === 0xFE) {
+      this.log('Config write requires authentication (0xFE)', 'error');
+      if (reject) reject(new Error('Authentication required (0xFE)'));
       return true;
     }
-    
-    // Config write error (0x00 0xCF)
-    if (responseType === 0x00 && command === 0xCF) {
-      this.log('Config write failed', 'error');
-      this.configWriteState.active = false;
-      if (this.configWriteState.onComplete) {
-        this.configWriteState.onComplete(new Error('Config write failed'));
-      }
+
+    // Failure (0xFF 0x41 / 0xFF 0x42)
+    if (responseType === 0xFF) {
+      this.log('Config write failed on device', 'error');
+      if (reject) reject(new Error('Config write failed'));
       return true;
     }
-    
-    return false;
+
+    // Success ack (0x00 0x41 / 0x00 0x42)
+    if (responseType === 0x00) {
+      if (resolve) resolve();
+      return true;
+    }
+
+    // Unexpected response type for a config-write command.
+    if (reject) {
+      reject(new Error(`Unexpected config write response (0x${responseType.toString(16)} 0x${command.toString(16)})`));
+    }
+    return true;
   }
   
   /**
@@ -2603,25 +2691,36 @@ class OpenDisplayBLE {
   }
   
   /**
-   * Write config to device (non-chunked, for small configs)
+   * Write config to device (non-chunked, for small configs).
+   *
+   * Resolves only once the device acks the write (0x00 0x41), rejects with a
+   * descriptive Error on failure (0xFF 0x41) or auth-required (0x00 0x41 0xFE),
+   * and rejects on timeout so a dead connection can't hang forever. The optional
+   * onComplete callback is still called with null on success / Error on failure.
    */
   async writeConfig(configBytes, onComplete) {
     if (!this.isConnected) {
       throw new Error('Not connected');
     }
-    
-    // Set up config write state for ACK handling
-    this.configWriteState.active = true;
-    this.configWriteState.onComplete = onComplete || null;
-    
+
     if (configBytes.length > 200) {
-      // Use chunked write for large configs
-      return await this.writeConfigChunked(configBytes);
+      // Use chunked write for large configs (it owns the write-state lifecycle).
+      return await this.writeConfigChunked(configBytes, onComplete);
     }
-    
-    // Small config - send in one command (0x0041)
-    const hexPayload = this.bytesToHex(configBytes).replace(/\s+/g, '');
-    await this.sendHexCommand('0041' + hexPayload);
+
+    this._beginConfigWrite(onComplete);
+    try {
+      // Small config - send in one command (0x0041). Arm the ack waiter first.
+      const hexPayload = this.bytesToHex(configBytes).replace(/\s+/g, '');
+      const ackPromise = this._awaitConfigWriteAck(0x41);
+      await this.sendHexCommand('0041' + hexPayload);
+      await ackPromise;
+      this.log('Config write successful', 'success');
+      this._finishConfigWrite(null);
+    } catch (err) {
+      this._finishConfigWrite(err);
+      throw err;
+    }
   }
   
   /**
@@ -2639,38 +2738,55 @@ class OpenDisplayBLE {
   }
   
   /**
-   * Write config to device (chunked, for large configs)
+   * Write config to device (chunked, for large configs).
+   *
+   * Paces on the device's per-chunk acks instead of a blind delay: sends the
+   * first chunk (0x0041 + 2-byte LE total size + data) and awaits its 0x41 ack,
+   * then sends each subsequent chunk (0x0042 + data) and awaits its 0x42 ack.
+   * The final 0x42 ack is the overall save result. Any failure or auth-required
+   * (0xFE) reply aborts the transfer and rejects. Resolves only on the final ack.
    */
-  async writeConfigChunked(configBytes) {
+  async writeConfigChunked(configBytes, onComplete) {
     if (!this.isConnected) {
       throw new Error('Not connected');
     }
-    
-    const chunkSize = 200;
-    const totalChunks = Math.ceil(configBytes.length / chunkSize);
-    
-    this.log(`Sending ${configBytes.length} bytes in ${totalChunks} chunks (${chunkSize} bytes each)...`, 'info');
-    
-    // First chunk with total size (command 0x0041)
-    const firstChunk = configBytes.slice(0, chunkSize);
-    const totalSizeBytes = new Uint8Array(2);
-    totalSizeBytes[0] = configBytes.length & 0xFF;
-    totalSizeBytes[1] = (configBytes.length >> 8) & 0xFF;
-    const firstChunkWithSize = new Uint8Array(2 + firstChunk.length);
-    firstChunkWithSize.set(totalSizeBytes, 0);
-    firstChunkWithSize.set(firstChunk, 2);
-    const hexPayload = this.bytesToHex(firstChunkWithSize).replace(/\s+/g, '');
-    await this.sendHexCommand('0041' + hexPayload);
-    
-    // Subsequent chunks (command 0x0042)
-    for (let i = 1; i < totalChunks; i++) {
-      const start = i * chunkSize;
-      const end = Math.min(start + chunkSize, configBytes.length);
-      const chunk = configBytes.slice(start, end);
-      const chunkHex = this.bytesToHex(chunk).replace(/\s+/g, '');
-      // Delay between chunks to avoid overwhelming the device
-      await this.delay(150);
-      await this.sendHexCommand('0042' + chunkHex);
+
+    this._beginConfigWrite(onComplete);
+    try {
+      const chunkSize = 200;
+      const totalChunks = Math.ceil(configBytes.length / chunkSize);
+
+      this.log(`Sending ${configBytes.length} bytes in ${totalChunks} chunks (${chunkSize} bytes each)...`, 'info');
+
+      // First chunk with total size (command 0x0041). Arm the ack waiter first.
+      const firstChunk = configBytes.slice(0, chunkSize);
+      const totalSizeBytes = new Uint8Array(2);
+      totalSizeBytes[0] = configBytes.length & 0xFF;
+      totalSizeBytes[1] = (configBytes.length >> 8) & 0xFF;
+      const firstChunkWithSize = new Uint8Array(2 + firstChunk.length);
+      firstChunkWithSize.set(totalSizeBytes, 0);
+      firstChunkWithSize.set(firstChunk, 2);
+      const hexPayload = this.bytesToHex(firstChunkWithSize).replace(/\s+/g, '');
+      const firstAck = this._awaitConfigWriteAck(0x41);
+      await this.sendHexCommand('0041' + hexPayload);
+      await firstAck;
+
+      // Subsequent chunks (command 0x0042), paced on each chunk's ack.
+      for (let i = 1; i < totalChunks; i++) {
+        const start = i * chunkSize;
+        const end = Math.min(start + chunkSize, configBytes.length);
+        const chunk = configBytes.slice(start, end);
+        const chunkHex = this.bytesToHex(chunk).replace(/\s+/g, '');
+        const ack = this._awaitConfigWriteAck(0x42);
+        await this.sendHexCommand('0042' + chunkHex);
+        await ack;
+      }
+
+      this.log('Config write successful', 'success');
+      this._finishConfigWrite(null);
+    } catch (err) {
+      this._finishConfigWrite(err);
+      throw err;
     }
   }
   
