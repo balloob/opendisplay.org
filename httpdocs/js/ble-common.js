@@ -3839,6 +3839,11 @@ if (supportsStreamingDecompression) {
       
       this.sendHexCommand('0071' + chunkHex).catch(err => {
         this.log('Error sending chunk: ' + err.message, 'error');
+        // The send failed terminally (sendHexCommand already retries GATT-busy
+        // errors). chunkIndex/pendingAcks advanced synchronously, so no 0x71 ACK
+        // will ever arrive for this chunk and the upload would otherwise hang
+        // forever with onComplete never called. Abort and surface the error.
+        this._abortDirectWrite(err);
       });
       state.chunkIndex++;
       state.pendingAcks++;
@@ -3859,14 +3864,33 @@ if (supportsStreamingDecompression) {
       
       if (state.mode === 'partial') {
         this.sendHexCommand(this.buildDirectWriteEndHex(2));
+      } else if (state.trackPartial && state.newEtag) {
+        // Send the etag-bearing end payload so the firmware stores displayed_etag
+        // (handleDirectWriteEnd only stores it for payloads of length >= 5),
+        // while preserving the fast-refresh mode. Previously a fast-refresh upload
+        // sent a 1-byte end (007201, no etag) yet _commitPartialState still
+        // recorded newEtag, so every subsequent partial update etag-mismatched and
+        // fell back to full — partial updates never actually happened.
+        const refreshMode = state.useFastRefresh ? 1 : 0;
+        this.sendHexCommand(this.buildDirectWriteEndHex(refreshMode, state.newEtag));
       } else if (state.useFastRefresh) {
         this.sendHexCommand('007201');
-      } else if (state.trackPartial && state.newEtag) {
-        this.sendHexCommand(this.buildDirectWriteEndHex(0, state.newEtag));
       } else {
         this.sendHexCommand('0072');
       }
     }
+  }
+
+  /**
+   * Abort an in-flight direct write and surface the error to onComplete.
+   */
+  _abortDirectWrite(err) {
+    const state = this.directWriteState;
+    if (!state || !state.active) return;
+    state.active = false;
+    const onComplete = state.onComplete;
+    this.directWriteState = null;
+    if (onComplete) onComplete(false, err);
   }
 
   /**
