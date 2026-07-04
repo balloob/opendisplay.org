@@ -48,6 +48,16 @@
   var displayPicker = root.querySelector('[data-picker-group="display"]');
   var chipPicker = root.querySelector('[data-picker-group="chip"]');
 
+  // render() and the event wiring below dereference all of these; bail if the
+  // markup is incomplete rather than throwing mid-setup and aborting the widget.
+  // (elEspWarn is genuinely optional and is null-checked at its use site.)
+  if (!elCapacity || !elInterval || !elStandby || !elLifeValue || !elLifeUnit ||
+      !elLifeSub || !elRefreshPct || !elRefreshMah || !elRefreshSub || !elStandbyPct ||
+      !elStandbyMah || !elStandbySub || !elDailyMah || !elDailySub || !elRange ||
+      !displayPicker || !chipPicker) {
+    return;
+  }
+
   var CHIP_SVG =
     '<svg width="28" height="22" viewBox="0 0 28 22" fill="none" aria-hidden="true">' +
     '<rect x="6" y="3" width="16" height="16" rx="1.5" stroke="currentColor" stroke-width="1.5"/>' +

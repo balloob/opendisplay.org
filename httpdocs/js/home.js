@@ -40,7 +40,7 @@
       var bestId = null;
       var bestRatio = 0;
       navSections.forEach(function (item) {
-        var ratio = parseFloat(item.el.dataset.navVisible || "0", 10);
+        var ratio = parseFloat(item.el.dataset.navVisible || "0");
         if (ratio > bestRatio) {
           bestRatio = ratio;
           bestId = item.id;

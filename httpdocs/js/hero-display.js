@@ -105,6 +105,9 @@
     if (document.hidden && timer) {
       window.clearTimeout(timer);
       timer = null;
+      // If we cancel during a fade, the flash promise chain is abandoned and
+      // never removes is-flashing; clear it so the slide isn't left mid-fade.
+      root.classList.remove("is-flashing");
     } else if (!document.hidden && !timer && !reducedMotion) {
       timer = window.setTimeout(loop, holdMs);
     }
