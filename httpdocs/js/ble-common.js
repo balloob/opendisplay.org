@@ -1695,8 +1695,11 @@ class OpenDisplayBLE {
     
     // Check if response is encrypted
     // Minimum encrypted response size: 2 (header) + 16 (nonce) + 1 (length byte) + 0 (min payload) + 12 (tag) = 31 bytes
-    // If response is shorter than 30 bytes, it's definitely unencrypted
-    const MIN_ENCRYPTED_RESPONSE_SIZE = 30;
+    // If response is shorter than 31 bytes, it's definitely unencrypted. Using 30
+    // let a 30-byte frame — which can never be valid ciphertext — reach
+    // decryptResponse, where it fails and counts toward integrityFailures; three
+    // such frames force-clear the authenticated session mid-operation.
+    const MIN_ENCRYPTED_RESPONSE_SIZE = 31;
     const isPotentiallyEncrypted = bytes.length >= MIN_ENCRYPTED_RESPONSE_SIZE;
     
     if (this.encryptionSession.authenticated && bytes.length >= 2 && isPotentiallyEncrypted) {
