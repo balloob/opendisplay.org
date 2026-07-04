@@ -117,7 +117,13 @@
         if (sensorType === SENSOR_TYPE_SHT40 && out.sht40StartByte === null) {
           let start = data[5];
           if (start === 0xff || start === undefined) start = 7;
-          out.sht40StartByte = start & 0xff;
+          start = start & 0xff;
+          // SHT40 reads 3 bytes (start..start+2) from the 11-byte dynamic region,
+          // so start must be <= 8. Validate symmetrically with BQ27220's idx <= 10
+          // check below; fall back to the default (7) rather than reporting an
+          // index that parseMsd16 will never decode.
+          if (start > 8) start = 7;
+          out.sht40StartByte = start;
         }
         if (sensorType === SENSOR_TYPE_BQ27220 && out.bq27220StartByte === null) {
           const idx = data[5] & 0xff;
