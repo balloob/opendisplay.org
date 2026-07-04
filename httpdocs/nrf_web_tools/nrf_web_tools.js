@@ -274,10 +274,17 @@ class NrfWebTools {
     content.innerHTML = `
       <div class="nrf52-dfu-message-page">
         <div class="nrf52-dfu-message-icon">⚠️</div>
-        <p>${data.message || 'An error occurred during the update process.'}</p>
-        ${data.details ? `<p class="nrf52-dfu-error-details">${data.details}</p>` : ''}
+        <p class="nrf52-dfu-error-message"></p>
+        ${data.details ? `<p class="nrf52-dfu-error-details"></p>` : ''}
       </div>
     `;
+    // Set via textContent so error text (which can include zip-manifest
+    // filenames from a loaded package) cannot inject markup into the DOM.
+    content.querySelector('.nrf52-dfu-error-message').textContent =
+      data.message || 'An error occurred during the update process.';
+    if (data.details) {
+      content.querySelector('.nrf52-dfu-error-details').textContent = data.details;
+    }
     actions.innerHTML = `
       <button class="nrf52-dfu-btn nrf52-dfu-btn-secondary" onclick="document.getElementById('nrf52-dfu-modal').querySelector('#nrf52-dfu-close-btn').click()">Close</button>
       ${data.retry ? `<button class="nrf52-dfu-btn nrf52-dfu-btn-primary" id="nrf52-dfu-retry-btn">Retry</button>` : ''}
@@ -769,7 +776,10 @@ class NrfWebTools {
       this.resolveAck = resolve;
       this.ackTimeout = setTimeout(() => {
         this.resolveAck = null;
-        this.hciSequenceNumber = 0;
+        // Do not reset hciSequenceNumber here: sendPacket resends the same pkt
+        // built with the old seq, and the adafruit-nrfutil reference does not
+        // reset on timeout. Resetting desyncs the HCI reliable-transport counter
+        // so one lost ACK could wedge the rest of the transfer.
         reject(new Error("ACK timeout"));
       }, timeout);
     });
@@ -781,11 +791,14 @@ class NrfWebTools {
     let packetSent = false;
     
     while (!packetSent) {
+      // Arm the ACK listener before writing so an ACK that lands immediately
+      // after the write is not dropped by readLoop (which needs resolveAck set).
+      const ackPromise = this.waitForAck();
       await this.writer.write(pkt);
       attempts++;
-      
+
       try {
-        let ack = await this.waitForAck();
+        let ack = await ackPromise;
         if (lastAck === null) {
           lastAck = ack;
           packetSent = true;
@@ -895,25 +908,25 @@ class NrfWebTools {
   }
   
   async disconnectPort() {
-    if (this.port) {
-      try {
-        if (this.reader) {
-          await this.reader.cancel();
-          this.reader.releaseLock();
-          this.reader = null;
-        }
-        if (this.writer) {
-          await this.writer.close();
-          this.writer.releaseLock();
-          this.writer = null;
-        }
-        if (this.port.readable) this.port.readable.releaseLock();
-        if (this.port.writable) this.port.writable.releaseLock();
-        await this.port.close();
-        this.port = null;
-      } catch (closeErr) {
-        // Ignore close errors
+    if (!this.port) return;
+    // ReadableStream/WritableStream have no releaseLock() (only the reader/writer
+    // do), so the old code threw before ever closing the port, leaving it open
+    // with a stale this.port and blocking the next reconnect. Close each step
+    // independently and always null every field in finally.
+    try {
+      if (this.reader) {
+        try { await this.reader.cancel(); } catch (e) {}
+        try { this.reader.releaseLock(); } catch (e) {}
       }
+      if (this.writer) {
+        try { await this.writer.close(); } catch (e) {}
+        try { this.writer.releaseLock(); } catch (e) {}
+      }
+      try { await this.port.close(); } catch (e) {}
+    } finally {
+      this.reader = null;
+      this.writer = null;
+      this.port = null;
     }
   }
   
@@ -1207,11 +1220,13 @@ class NrfWebTools {
       await this.disconnectPort();
       
       // Check if this is a connection error and we have more firmware to flash
-      const isConnectionError = e.message && (
-        e.message.includes('Failed to get ACK') || 
-        e.message.includes('ACK timeout') ||
-        e.message.includes('NotFoundError')
-      );
+      // A cancelled port picker throws a DOMException whose *name* is
+      // 'NotFoundError' (its message is "No port selected by the user."), so
+      // check e.name, not e.message, to route cancellation to the reconnect path.
+      const isConnectionError = e.name === 'NotFoundError' || (e.message && (
+        e.message.includes('Failed to get ACK') ||
+        e.message.includes('ACK timeout')
+      ));
       
       if (isConnectionError && this.currentFirmwareIndex < this.firmwareQueue.length) {
         // Connection lost, need to reconnect
