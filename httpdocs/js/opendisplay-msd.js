@@ -117,7 +117,13 @@
         if (sensorType === SENSOR_TYPE_SHT40 && out.sht40StartByte === null) {
           let start = data[5];
           if (start === 0xff || start === undefined) start = 7;
-          out.sht40StartByte = start & 0xff;
+          start = start & 0xff;
+          // SHT40 reads 3 bytes (start..start+2) from the 11-byte dynamic region,
+          // so start must be <= 8. Validate symmetrically with BQ27220's idx <= 10
+          // check below; fall back to the default (7) rather than reporting an
+          // index that parseMsd16 will never decode.
+          if (start > 8) start = 7;
+          out.sht40StartByte = start;
         }
         if (sensorType === SENSOR_TYPE_BQ27220 && out.bq27220StartByte === null) {
           const idx = data[5] & 0xff;
@@ -149,8 +155,10 @@
    */
   function parseMsd16(msd16, opts) {
     const legacyMode = opts === undefined;
+    // Normalize an explicit `null` opts so the direct `opts.*` reads below don't throw.
+    if (!legacyMode) opts = opts || {};
     const u8 = msd16 instanceof Uint8Array ? msd16 : new Uint8Array(msd16);
-    if (u8.length < 16) {
+    if (u8.length !== 16) {
       return { error: 'Expected 16 bytes, got ' + u8.length };
     }
     const companyId = u8[0] | (u8[1] << 8);
@@ -232,6 +240,9 @@
       },
       buttonBlock,
       touchBlock,
+      // Deprecated alias of `touchBlock`. Despite the name it is NOT necessarily
+      // decoded at offset 0: in config mode it reflects `touchDataStartByte`.
+      // Prefer `touchBlock` (has `.startByte`); kept only for backward compatibility.
       touchBlockAt0: touchBlock,
       sht40At7: sht40At7,
       sht40StartByte: legacyMode ? 7 : opts.sht40StartByte != null ? sht40StartByteUsed : null,
