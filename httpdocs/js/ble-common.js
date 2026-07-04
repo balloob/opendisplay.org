@@ -58,6 +58,8 @@ class OpenDisplayBLE {
     this.reconnectAttempts = 0;
     this.reconnectTimer = null;
     this.autoReconnectEnabled = true; // disabled by explicit user disconnect
+    // Bound once so add/removeEventListener share the same reference.
+    this._onDisconnect = () => this.handleDisconnect();
     this.configYAML = null;
     this.packetSchema = null;  // Parsed packet schema from YAML
     this.packetSizes = {};     // Cached packet sizes
@@ -472,7 +474,7 @@ class OpenDisplayBLE {
       this.log(`Found: ${this.device.name || 'Unknown device'} (${this.device.id})`, 'success');
       this.setStatus(`Found ${this.device.name || 'device'}`, false);
       
-      this.device.addEventListener('gattserverdisconnected', () => this.handleDisconnect());
+      this.device.addEventListener('gattserverdisconnected', this._onDisconnect);
       
       return await this.connectToGATT();
     } catch (error) {
@@ -687,7 +689,7 @@ class OpenDisplayBLE {
     }
     
     if (this.device && this.device.removeEventListener) {
-      this.device.removeEventListener('gattserverdisconnected', this.handleDisconnect);
+      this.device.removeEventListener('gattserverdisconnected', this._onDisconnect);
     }
     
     if (this.device && this.device.gatt && this.device.gatt.connected) {
@@ -1811,7 +1813,9 @@ class OpenDisplayBLE {
         if (bytes.length >= 6) {
           this.configReadState.totalLength = bytes[4] | (bytes[5] << 8);
           const firstChunkDataSize = bytes.length - 6;
-          const subsequentChunkDataSize = 512 - 4;
+          // Firmware caps each config-read packet at 100 bytes (handleReadConfig),
+          // leaving ~96 data bytes after the 4-byte response header.
+          const subsequentChunkDataSize = 100 - 4;
           const remainingData = this.configReadState.totalLength - firstChunkDataSize;
           this.configReadState.expectedChunks = 1 + Math.ceil(remainingData / subsequentChunkDataSize);
           this.log(`Config read: ${this.configReadState.totalLength} bytes expected in ${this.configReadState.expectedChunks} chunks`, 'info');
@@ -2003,125 +2007,6 @@ class OpenDisplayBLE {
         reject(e);
       });
     });
-  }
-  
-  /**
-   * Handle generic command notifications (ACK, errors)
-   */
-  handleGenericCommandNotification(bytes) {
-    if (bytes.length < 2) return false;
-    
-    const responseType = bytes[0];
-    const command = bytes[1];
-    
-    // Command ACK (0x00 0x63)
-    if (responseType === 0x00 && command === 0x63) {
-      if (this.onCommandAck) {
-        this.onCommandAck();
-      }
-      return true;
-    }
-    
-    // General command error (0xFF 0xFF)
-    if (responseType === 0xFF && command === 0xFF) {
-      this.log('General command error (FFFF)', 'error');
-      if (this.onCommandError) {
-        this.onCommandError('FFFF');
-      }
-      return true;
-    }
-    
-    return false;
-  }
-  
-  /**
-   * Handle config write notifications (built-in handler)
-   */
-  handleConfigWriteNotification(bytes) {
-    if (bytes.length < 2) return false;
-    
-    const responseType = bytes[0];
-    const command = bytes[1];
-    
-    // Config write ACK (0x00 0xCE)
-    if (responseType === 0x00 && command === 0xCE) {
-      this.log('Config write successful', 'success');
-      this.configWriteState.active = false;
-      if (this.configWriteState.onComplete) {
-        this.configWriteState.onComplete(null);
-      }
-      return true;
-    }
-    
-    // Config write error (0x00 0xCF)
-    if (responseType === 0x00 && command === 0xCF) {
-      this.log('Config write failed', 'error');
-      this.configWriteState.active = false;
-      if (this.configWriteState.onComplete) {
-        this.configWriteState.onComplete(new Error('Config write failed'));
-      }
-      return true;
-    }
-    
-    return false;
-  }
-  
-  /**
-   * Handle firmware version notifications (built-in handler)
-   */
-  handleFirmwareVersionNotification(bytes) {
-    if (bytes.length < 2) return false;
-    
-    const responseType = bytes[0];
-    const command = bytes[1];
-    
-    // Firmware version response (0x00 0x43)
-    if (responseType === 0x00 && command === 0x43) {
-      if (bytes.length < 6) {
-        this.log('Firmware version response too short', 'error');
-        this.firmwareVersionState.active = false;
-        if (this.firmwareVersionState.onComplete) {
-          this.firmwareVersionState.onComplete(null, new Error('Response too short'));
-        }
-        return true;
-      }
-      
-      try {
-        const major = bytes[2];
-        const minor = bytes[3];
-        const shaLength = bytes[4];
-        let sha = '';
-        
-        if (shaLength > 0 && bytes.length >= 5 + shaLength) {
-          const shaBytes = bytes.slice(5, 5 + shaLength);
-          sha = Array.from(shaBytes).map(b => String.fromCharCode(b)).join('');
-        }
-        
-        const versionInfo = {
-          major: major,
-          minor: minor,
-          sha: sha
-        };
-        
-        this.firmwareVersionState.active = false;
-        if (this.firmwareVersionState.onComplete) {
-          this.firmwareVersionState.onComplete(versionInfo, null);
-        }
-        if (this.onFirmwareVersion) {
-          this.onFirmwareVersion(versionInfo);
-        }
-        return true;
-      } catch (e) {
-        this.log(`Error parsing firmware version: ${e.message}`, 'error');
-        this.firmwareVersionState.active = false;
-        if (this.firmwareVersionState.onComplete) {
-          this.firmwareVersionState.onComplete(null, e);
-        }
-        return true;
-      }
-    }
-    
-    return false;
   }
   
   /**
@@ -2737,20 +2622,6 @@ class OpenDisplayBLE {
   }
   
   /**
-   * Read firmware version from device
-   */
-  async readFirmwareVersion(onComplete) {
-    if (!this.isConnected) {
-      throw new Error('Not connected');
-    }
-    
-    this.firmwareVersionState.active = true;
-    this.firmwareVersionState.onComplete = onComplete || null;
-    
-    await this.sendHexCommand('0043');
-  }
-  
-  /**
    * Write config to device (chunked, for large configs)
    */
   async writeConfigChunked(configBytes) {
@@ -2781,7 +2652,7 @@ class OpenDisplayBLE {
       const chunk = configBytes.slice(start, end);
       const chunkHex = this.bytesToHex(chunk).replace(/\s+/g, '');
       // Delay between chunks to avoid overwhelming the device
-      await this.delay(i * 150);
+      await this.delay(150);
       await this.sendHexCommand('0042' + chunkHex);
     }
   }
