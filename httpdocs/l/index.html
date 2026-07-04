@@ -585,13 +585,20 @@
       }
     }
 
+    function formatKeyForDisplay(hex) {
+      var cleaned = (hex || '').replace(/[^0-9A-Fa-f]/g, '');
+      if (!cleaned.length) return '—';
+      if (/^0+$/.test(cleaned)) return '-';
+      return hex;
+    }
+
     function setDisplayViewValues() {
       var nameEl = document.getElementById('out-name');
       var keyEl = document.getElementById('out-key');
       var mfgEl = document.getElementById('out-mfg');
       var displayMfg = document.getElementById('display-mfg');
       if (nameEl) document.getElementById('display-name').textContent = nameEl.textContent || '—';
-      if (keyEl) document.getElementById('display-key').textContent = keyEl.textContent || '—';
+      if (keyEl) document.getElementById('display-key').textContent = formatKeyForDisplay(keyEl.textContent || '');
       if (mfgEl && displayMfg) {
         var mfgId = parseInt(mfgEl.textContent, 10);
         displayMfg.textContent = !isNaN(mfgId) && MANUFACTURERS[mfgId] !== undefined ? MANUFACTURERS[mfgId] : (mfgEl.textContent || '—');
@@ -629,13 +636,14 @@
           var mfgId = (mfgPart[0] << 8) | mfgPart[1];
           var nameStr = 'OD' + bufToHex(namePart);
           var mfgNameStr = MANUFACTURERS[mfgId] !== undefined ? MANUFACTURERS[mfgId] : 'Unknown (' + mfgId + ')';
+          var keyHex = bufToHex(keyPart);
 
           document.getElementById('out-res').textContent = '0x' + bufToHex(resPart);
           document.getElementById('out-name').textContent = nameStr;
-          document.getElementById('out-key').textContent = bufToHex(keyPart);
+          document.getElementById('out-key').textContent = keyHex;
           document.getElementById('out-mfg').textContent = mfgId;
           document.getElementById('display-name').textContent = nameStr;
-          document.getElementById('display-key').textContent = bufToHex(keyPart);
+          document.getElementById('display-key').textContent = formatKeyForDisplay(keyHex);
           document.getElementById('display-mfg').textContent = mfgNameStr;
 
           document.getElementById('decoder-results').style.display = 'block';
@@ -696,7 +704,7 @@
       displayKeyWrap.addEventListener('click', function () {
         var keyEl = document.getElementById('display-key');
         var text = keyEl ? keyEl.textContent : '';
-        if (text && text !== '—' && navigator.clipboard && navigator.clipboard.writeText) {
+        if (text && text !== '—' && text !== '-' && text !== 'X' && navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(text.trim());
         }
       });

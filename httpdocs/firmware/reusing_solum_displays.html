@@ -1,135 +1,58 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="icon" href="../assets/brand/logo-mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../css/colors_and_type.css">
+  <link rel="stylesheet" href="../css/inner.css">
+  <link rel="stylesheet" href="../css/doc.css">
+
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Run OpenDisplay on Solum M3 e-paper tags: direct BLE from your devices and Home Assistant, Toolbox presets for nRF52811 and EFR32BG22, FCC IDs, color modes, and flash notes.">
-  <meta name="keywords" content="OpenDisplay, Solum, M3, e-paper, e-ink, BLE, Bluetooth Low Energy, Home Assistant, nRF52811, EFR32BG22, J-Link, Toolbox, FCC, license-free">
-  <meta name="robots" content="index, follow">
-  <meta name="author" content="OpenDisplay">
+  <meta name="description" content="Community notes on running OpenDisplay on Solum M3 e-paper tags: supported panels, Toolbox presets, FCC IDs, and flashing prerequisites.">
   <link rel="canonical" href="https://opendisplay.org/firmware/reusing_solum_displays.html">
-  <meta property="og:title" content="Reusing Solum M3 displays with OpenDisplay firmware">
-  <meta property="og:description" content="Direct BLE control, no license fees for OpenDisplay firmware, Home Assistant integration, Toolbox configuration, and a compatibility table for Solum M3 Nordic and Silicon Labs panels.">
-  <meta property="og:type" content="article">
+  <meta property="og:title" content="Reusing Solum M3 displays - OpenDisplay">
+  <meta property="og:description" content="Compatibility notes for Solum M3 e-paper tags with OpenDisplay firmware.">
+  <meta property="og:type" content="website">
   <meta property="og:url" content="https://opendisplay.org/firmware/reusing_solum_displays.html">
-  <meta property="og:locale" content="en_US">
-  <meta property="og:site_name" content="OpenDisplay">
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Reusing Solum M3 displays with OpenDisplay firmware">
-  <meta name="twitter:description" content="Direct BLE, no license fees, Home Assistant, Toolbox presets, FCC IDs, and flash guidance for Solum M3 tags.">
-  <link rel="shortcut icon" href="install/favicon.ico">
-  <link rel="stylesheet" href="/common.css">
-  <title>Reusing Solum M3 displays with OpenDisplay firmware</title>
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "WebSite",
-        "@id": "https://opendisplay.org/#website",
-        "name": "OpenDisplay",
-        "url": "https://opendisplay.org/"
-      },
-      {
-        "@type": "WebPage",
-        "@id": "https://opendisplay.org/firmware/reusing_solum_displays.html#webpage",
-        "url": "https://opendisplay.org/firmware/reusing_solum_displays.html",
-        "name": "Reusing Solum M3 displays with OpenDisplay firmware",
-        "description": "Guide to running OpenDisplay on Solum M3 e-paper hardware: Bluetooth Low Energy to the tag without license fees, Home Assistant integration, web Toolbox configuration, FCC identifiers, supported color modes, and flashing prerequisites including J-Link.",
-        "inLanguage": "en",
-        "isPartOf": { "@id": "https://opendisplay.org/#website" },
-        "about": [
-          { "@type": "Thing", "name": "OpenDisplay firmware" },
-          {
-            "@type": "Thing",
-            "name": "Solum M3 e-paper display",
-            "description": "Retail e-paper tag hardware (various models) referenced for third-party firmware compatibility; informational page, not a product listing."
-          }
-        ],
-        "specialty": ["Bluetooth Low Energy", "Home Assistant", "e-paper display"]
-      },
-      {
-        "@type": "BreadcrumbList",
-        "@id": "https://opendisplay.org/firmware/reusing_solum_displays.html#breadcrumb",
-        "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://opendisplay.org/" },
-          { "@type": "ListItem", "position": 2, "name": "Firmware", "item": "https://opendisplay.org/firmware/" },
-          { "@type": "ListItem", "position": 3, "name": "Reusing Solum displays", "item": "https://opendisplay.org/firmware/reusing_solum_displays.html" }
-        ]
-      }
-    ]
-  }
-  </script>
+  <title>Reusing Solum M3 displays - OpenDisplay</title>
 <style>
-/* Page-specific styles (aligned with adding-displays.html) */
-.breadcrumb {
-  margin-bottom: 20px;
-  color: var(--muted-foreground);
-  font-size: 0.9rem;
-}
-.breadcrumb a {
-  color: var(--muted-foreground);
-  text-decoration: none;
-}
-.breadcrumb a:hover {
-  color: var(--accent);
-}
-.breadcrumb-separator {
-  margin: 0 8px;
-  color: var(--muted-foreground);
-}
 .table-wrapper {
   overflow-x: auto;
-  margin: 12px 0;
+  margin-top: 16px;
 }
 .solum-display-table {
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0 6px;
-  margin: 12px 0;
+  border-collapse: collapse;
   min-width: 760px;
 }
 .solum-display-table thead th {
-  padding: 8px 12px;
   text-align: left;
-  vertical-align: middle;
   font-size: 0.85rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  border-bottom: 2px solid var(--border-color);
-  font-weight: 600;
   color: var(--foreground);
   background: var(--card-background);
+  padding: 0.75rem;
+  border-bottom: 2px solid var(--border-color);
+  font-weight: 600;
 }
-.solum-display-table tbody tr:not(.platform) td {
-  padding: 8px 12px;
-  text-align: left;
+.solum-display-table tbody td {
+  padding: 0.85rem 0.75rem;
+  border-bottom: 1px solid var(--border-color);
   vertical-align: middle;
   color: var(--foreground);
-  border: 1px solid var(--border-color);
-  border-left-width: 0;
-  border-right-width: 0;
+}
+.solum-display-table tbody tr:not(.platform) {
   background: var(--background);
 }
-.solum-display-table tbody tr:not(.platform) td:first-child {
-  border-left-width: 1px;
-  border-top-left-radius: 8px;
-  border-bottom-left-radius: 8px;
-}
-.solum-display-table tbody tr:not(.platform) td:last-child {
-  border-right-width: 1px;
-  border-top-right-radius: 8px;
-  border-bottom-right-radius: 8px;
-}
-.solum-display-table tbody tr:not(.platform):hover td {
+.solum-display-table tbody tr:not(.platform):hover {
   background: var(--card-background);
 }
 .solum-display-table tr.platform th {
   text-align: left;
   font-size: 0.95rem;
   font-weight: 600;
-  padding: 16px 12px 8px;
-  text-transform: none;
-  letter-spacing: normal;
+  padding: 1.25rem 0.75rem 0.5rem;
   border: none;
   background: transparent;
 }
@@ -142,12 +65,11 @@
   font-weight: 500;
 }
 .product a {
-  color: var(--foreground);
+  color: var(--accent);
   text-decoration: none;
-  font-weight: 500;
 }
 .product a:hover {
-  color: var(--foreground);
+  color: var(--accent-hover);
   text-decoration: underline;
 }
 .solum-display-table tbody tr.row-clickable {
@@ -156,10 +78,9 @@
 .solum-display-table tbody tr.row-clickable:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 8px;
 }
 .fcc {
-  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  font-family: var(--font-mono);
   font-size: 0.9rem;
 }
 .fcc.missing {
@@ -171,8 +92,6 @@
 }
 .color-swatches {
   display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
   gap: 5px;
   align-items: center;
 }
@@ -180,8 +99,7 @@
   width: 22px;
   height: 22px;
   border-radius: 4px;
-  border: 1px solid rgba(0, 0, 0, 0.18);
-  box-sizing: border-box;
+  border: 1px solid var(--od-paper-line);
   flex-shrink: 0;
 }
 .badge {
@@ -200,45 +118,7 @@
   background: #fef3c7;
   color: #78350f;
 }
-.danger-box {
-  width: 100%;
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
-  background: #fee2e2;
-  border: 2px solid #dc2626;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px;
-}
-.danger-box h3 {
-  color: #991b1b;
-  font-size: 1.2rem;
-  margin-top: 0;
-  margin-bottom: 12px;
-}
-.danger-box p {
-  color: #7f1d1d;
-  margin: 0 0 12px;
-  line-height: 1.6;
-}
-.danger-box p:last-child {
-  margin-bottom: 0;
-}
-.edit-note {
-  font-size: 0.8rem;
-  color: var(--muted-foreground);
-  margin-top: 12px;
-}
-.edit-note code {
-  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-  font-size: 0.78rem;
-  color: var(--accent);
-}
 @media (prefers-color-scheme: dark) {
-  .color-patch {
-    border-color: rgba(255, 255, 255, 0.22);
-  }
   .compatible {
     background: #166534;
     color: #dcfce7;
@@ -247,226 +127,242 @@
     background: #78350f;
     color: #fef3c7;
   }
-  .danger-box {
-    background: #7f1d1d;
-    border-color: #f87171;
-  }
-  .danger-box h3 {
-    color: #fecaca;
-  }
-  .danger-box p {
-    color: #fecaca;
-  }
 }
 </style>
 </head>
-<body>
-  <main id="main-content">
-  <div class="col" style="max-width: 1200px; margin-bottom: 10px;">
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      <a href="../index.html">Home</a><span class="breadcrumb-separator">/</span>
-      <a href="index.html">Firmware</a><span class="breadcrumb-separator">/</span>
-      <span aria-current="page">Reusing Solum displays</span>
-    </nav>
-  </div>
-  <article itemscope itemtype="https://schema.org/TechArticle">
-  <meta itemprop="headline" content="Reusing Solum M3 displays with OpenDisplay firmware">
-  <h1 itemprop="name">Reusing Solum displays</h1>
+<body class="page-inner doc-page">
+  <a href="#main-content" class="skip-link">Skip to main content</a>
 
-  <div class="col panel" id="why-opendisplay">
-    <h2>Why use OpenDisplay firmware?</h2>
-    <p class="intro-text" id="summary-lead" itemprop="abstract">
-      OpenDisplay replaces the factory image on supported Solum M3 e-paper tags with community firmware
-      built around Bluetooth Low Energy (BLE). Images and settings go straight from your phone, PC, or
-      home automation stack to the tag over BLE - there are no license fees for using OpenDisplay
-      firmware or the web Toolbox.
-    </p>
-    <p class="intro-text">
-      OpenDisplay pairs with the official <a href="../homeassistant/index.html">Home Assistant integration</a>, which
-      talks to the tag over BLE (including via common Bluetooth proxy setups such as ESPHome proxies). Together with
-      the browser-based <a href="toolbox/index.html">Firmware Toolbox</a> for install and packet-based configuration,
-      the project targets self-hosted, reproducible setups.
-    </p>
-    <p class="intro-text">
-      The table below lists known M3 panels (Nordic nRF52811 and Silicon Labs EFR32BG22
-      variants), FCC IDs, on-glass color capabilities, and Toolbox preset links where they exist.
-    </p>
-  </div>
-
-  <div class="danger-box">
-    <p>
-      <strong>OpenDisplay</strong> is an independent community project. It is not affiliated with, endorsed by, or
-      otherwise tied to the manufacturer of the devices listed here. Trademarks and model names are used solely to
-      describe hardware that community members have tested.
-    </p>
-    <p>
-      Replacing factory firmware with OpenDisplay may void your warranty, brick the device, or cause data loss.
-      Do not expect documentation, updates, or technical support from the hardware manufacturer for third-party
-      firmware. In many cases there is no official or reliable way to restore the original factory image once it has
-      been overwritten. You are solely responsible for deciding whether to flash firmware from this project.
-    </p>
-    <p>
-      The actual hardware inside a given retail unit can differ between batches, regions, or silent revisions, even
-      when the model name on the label matches an entry in the table. A row marked compatible or work in progress
-      reflects community experience, not a promise that your display will work; there are no
-      guarantees.
-    </p>
-  </div>
-
-  <div class="col panel" id="solum-m3-table">
-    <h2>Prebuild panels (M3)</h2>
-    <!--
-      Edit rows below. Toolbox link: wrap the name in <a href="toolbox/index.html?...">...</a> and use the Compatible badge.
-      Colors: reuse one of the three <td class="colors">…</td> blocks (bw / bwr / bwry). FCC empty → class="fcc missing">—
-    -->
-    <div class="table-wrapper">
-      <table class="solum-display-table" aria-label="Solum M3 prebuild display list">
-        <thead>
-          <tr>
-            <th scope="col">Name</th>
-            <th scope="col">FCC ID</th>
-            <th scope="col">Colors</th>
-            <th scope="col">Firmware</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr class="platform">
-            <th scope="colgroup" colspan="4">M3 NRF <span class="mcu">· nRF52811</span></th>
-          </tr>
-          <tr>
-            <td class="product">1.3" EL013H2WRD</td>
-            <td class="fcc">2AFWN-EL013H2WRD</td>
-            <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span></div></td>
-            <td><span class="badge wip">Work in progress</span></td>
-          </tr>
-          <tr>
-            <td class="product">2.2" EL022H3WRA</td>
-            <td class="fcc">2AFWN-EL022H3WRA</td>
-            <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span></div></td>
-            <td><span class="badge wip">Work in progress</span></td>
-          </tr>
-          <tr>
-            <td class="product">2.2" EL022H4WRC</td>
-            <td class="fcc">2AFWN-EL016H4WRC</td>
-            <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span></div></td>
-            <td><span class="badge wip">Work in progress</span></td>
-          </tr>
-          <tr>
-            <td class="product"><a href="toolbox/index.html?driver=m3-nrf&amp;display=uc8151-027-bwr&amp;power=battery-prim-2p">2.7" EL027H3BRA</a></td>
-            <td class="fcc">2AFWN-EL029H3WRA</td>
-            <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span></div></td>
-            <td><span class="badge compatible">Compatible</span></td>
-          </tr>
-          <tr>
-            <td class="product"><a href="toolbox/index.html?driver=m3-nrf&amp;display=uc8151-029-bwr&amp;power=battery-prim-2p">2.9" EL029H3WRA</a></td>
-            <td class="fcc">2AFWN-EL029H3WRA</td>
-            <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span></div></td>
-            <td><span class="badge compatible">Compatible</span></td>
-          </tr>
-
-          <tr class="platform">
-            <th scope="colgroup" colspan="4">M3 Silabs <span class="mcu">· EFR32BG22C222F352GM40</span></th>
-          </tr>
-          <tr>
-            <td class="product">1.6" BWRY EL016F5C4C</td>
-            <td class="fcc missing">—</td>
-            <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red, Yellow"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span><span class="color-patch" style="background-color:#ffeb3b" title="Yellow"></span></div></td>
-            <td><span class="badge wip">Work in progress</span></td>
-          </tr>
-          <tr>
-            <td class="product">2.2" BWRY EL022F6W4A</td>
-            <td class="fcc missing">—</td>
-            <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red, Yellow"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span><span class="color-patch" style="background-color:#ffeb3b" title="Yellow"></span></div></td>
-            <td><span class="badge wip">Work in progress</span></td>
-          </tr>
-          <tr>
-            <td class="product"><a href="toolbox/index.html?driver=m3-pro-silabs&amp;display=ep266yr-184x360&amp;power=battery-prim-2p">2.6" BWRY EL026F6W4A</a></td>
-            <td class="fcc">2AFWN-EL026F6W4A</td>
-            <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red, Yellow"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span><span class="color-patch" style="background-color:#ffeb3b" title="Yellow"></span></div></td>
-            <td><span class="badge compatible">Compatible</span></td>
-          </tr>
-          <tr>
-            <td class="product">2.9" BW Freezer EL029F3WRA</td>
-            <td class="fcc missing">—</td>
-            <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span></div></td>
-            <td><span class="badge wip">Work in progress</span></td>
-          </tr>
-          <tr>
-            <td class="product">2.9" BWRY EL029F5C4C</td>
-            <td class="fcc missing">—</td>
-            <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red, Yellow"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span><span class="color-patch" style="background-color:#ffeb3b" title="Yellow"></span></div></td>
-            <td><span class="badge wip">Work in progress</span></td>
-          </tr>
-          <tr>
-            <td class="product"><a href="toolbox/index.html?driver=m3-core-silabs&amp;display=ep35yr-184x384&amp;power=battery-prim-2p">3.5" BWRY EL035F5C4C</a></td>
-            <td class="fcc">2AFWN-EL035F5C4C</td>
-            <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red, Yellow"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span><span class="color-patch" style="background-color:#ffeb3b" title="Yellow"></span></div></td>
-            <td><span class="badge compatible">Compatible</span></td>
-          </tr>
-          <tr>
-            <td class="product">4.2" BWRY EL042F6W4A</td>
-            <td class="fcc missing">—</td>
-            <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red, Yellow"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span><span class="color-patch" style="background-color:#ffeb3b" title="Yellow"></span></div></td>
-            <td><span class="badge wip">Work in progress</span></td>
-          </tr>
-          <tr>
-            <td class="product">4.3" BWRY EL043F5C4C</td>
-            <td class="fcc missing">—</td>
-            <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red, Yellow"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span><span class="color-patch" style="background-color:#ffeb3b" title="Yellow"></span></div></td>
-            <td><span class="badge wip">Work in progress</span></td>
-          </tr>
-          <tr>
-            <td class="product">7.5" BWRY EL075F5CRC</td>
-            <td class="fcc missing">—</td>
-            <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red, Yellow"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span><span class="color-patch" style="background-color:#ffeb3b" title="Yellow"></span></div></td>
-            <td><span class="badge wip">Work in progress</span></td>
-          </tr>
-          <tr>
-            <td class="product">11.6" BWRY EL116F5CRC</td>
-            <td class="fcc missing">—</td>
-            <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red, Yellow"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span><span class="color-patch" style="background-color:#ffeb3b" title="Yellow"></span></div></td>
-            <td><span class="badge wip">Work in progress</span></td>
-          </tr>
-        </tbody>
-      </table>
+  <header class="site-bar">
+    <div class="site-bar__accent" aria-hidden="true"></div>
+    <div class="site-bar__inner">
+      <a href="../index.html" class="site-bar__brand" aria-label="OpenDisplay home">
+        <img src="../assets/brand/logo-mark.svg" alt="" class="site-bar__mark" width="24" height="24">
+        <span class="site-bar__wordmark">OpenDisplay</span>
+      </a>
+      <div class="site-bar__icons">
+        <a href="https://github.com/OpenDisplay/" target="_blank" rel="noreferrer" class="site-bar__icon" aria-label="OpenDisplay on GitHub (opens in new tab)">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        </a>
+        <a href="https://discord.gg/XmTHz8RfJE" target="_blank" rel="noreferrer" class="site-bar__icon" aria-label="Join OpenDisplay on Discord (opens in new tab)">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+        </a>
+      </div>
     </div>
-  </div>
+  </header>
 
-  <div class="col panel" id="flashing-notes">
-    <h2>Flashing</h2>
-    <p class="intro-text">
-      Flash the display by following the build and flash instructions in the
-      <a href="https://github.com/OpenDisplay/" target="_blank" rel="noopener">OpenDisplay firmware repository</a>
-      for your MCU port (tool chain, SWD wiring, unlock steps, and any board-specific notes live there).
-    </p>
-    <p class="intro-text">
-      <strong>After</strong> the chip has been programmed successfully, configure the device in the
-      <a href="toolbox/index.html">Toolbox</a>. When your row lists a compatible preset link, open that link
-      <strong>after flashing</strong> so the saved packets match your hardware (driver, panel, power, and related fields).
-    </p>
-    <p class="intro-text">
-      A genuine Segger J-Link probe is strongly recommended; many third-party clones do not behave
-      reliably when programming. To <strong>unlock</strong> the microcontroller for full erase and
-      reflash, you need <strong>at least a J-Link hardware version 9</strong> (V9); older Segger bases and low-end probes
-      often cannot complete unlock on these parts.
-    </p>
-  </div>
+  <main id="main-content" class="tool-page">
+    <div class="container">
+      <h1>Reusing Solum displays</h1>
 
-  <div class="col panel">
-    <div class="footer-links">
-      <a href="../index.html">Home</a>
-      <span class="footer-separator">•</span>
-      <a href="https://github.com/OpenDisplay/" target="_blank" rel="noopener" aria-label="View on GitHub (opens in new tab)">GitHub</a>
-      <span class="footer-separator">•</span>
-      <a href="https://discord.gg/XmTHz8RfJE" target="_blank" rel="noopener" aria-label="Join OpenDisplay Discord community (opens in new tab)">Discord</a>
-      <span class="footer-separator">•</span>
-      <a href="../impressum.html">imprint (Impressum)</a>
-      <span class="footer-separator">•</span>
-      <a href="../datenschutz.html">privacy (Datenschutz)</a>
+      <div class="col panel">
+        <h2>Overview</h2>
+        <p class="tool-description">
+          OpenDisplay can replace the factory firmware on some Solum M3 e-paper tags. Images and settings are sent
+          over Bluetooth Low Energy from your phone, PC, or home automation stack. The firmware and web Toolbox are
+          free to use.
+        </p>
+        <p class="tool-description">
+          Use the <a href="toolbox/index.html">Firmware Toolbox</a> to flash and configure a tag, and the
+          <a href="../homeassistant/index.html">Home Assistant integration</a> for automations (via BLE proxies such as
+          ESPHome). The table below lists panels the community has tested on Nordic nRF52811 and Silicon Labs
+          EFR32BG22 hardware, with FCC IDs and Toolbox preset links where available.
+        </p>
+      </div>
+
+      <div class="col panel">
+        <div class="screen-section__disclaimer screen-section__disclaimer--warn">
+          <p>
+            OpenDisplay is an independent community project, not affiliated with Solum or other hardware vendors.
+            Model names are used only to describe hardware people have tried.
+          </p>
+          <p>
+            Replacing factory firmware may void your warranty, brick the device, or cause data loss. There is often no
+            reliable way to restore the original image once it has been overwritten. You are responsible for deciding
+            whether to flash third-party firmware.
+          </p>
+          <p>
+            Hardware can differ between batches even when the label matches a table entry. A row marked compatible or
+            work in progress reflects community experience, not a guarantee for your unit.
+          </p>
+        </div>
+      </div>
+
+      <div class="col panel">
+        <h2>Prebuild panels (M3)</h2>
+        <div class="table-wrapper">
+          <table class="solum-display-table" aria-label="Solum M3 prebuild display list">
+            <thead>
+              <tr>
+                <th scope="col">Name</th>
+                <th scope="col">FCC ID</th>
+                <th scope="col">Colors</th>
+                <th scope="col">Firmware</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="platform">
+                <th scope="colgroup" colspan="4">M3 NRF <span class="mcu">· nRF52811</span></th>
+              </tr>
+              <tr>
+                <td class="product">1.3" EL013H2WRD</td>
+                <td class="fcc">2AFWN-EL013H2WRD</td>
+                <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span></div></td>
+                <td><span class="badge wip">Work in progress</span></td>
+              </tr>
+              <tr>
+                <td class="product">2.2" EL022H3WRA</td>
+                <td class="fcc">2AFWN-EL022H3WRA</td>
+                <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span></div></td>
+                <td><span class="badge wip">Work in progress</span></td>
+              </tr>
+              <tr>
+                <td class="product">2.2" EL022H4WRC</td>
+                <td class="fcc">2AFWN-EL016H4WRC</td>
+                <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span></div></td>
+                <td><span class="badge wip">Work in progress</span></td>
+              </tr>
+              <tr>
+                <td class="product"><a href="toolbox/index.html?driver=m3-nrf&amp;display=uc8151-027-bwr&amp;power=battery-prim-2p">2.7" EL027H3BRA</a></td>
+                <td class="fcc">2AFWN-EL029H3WRA</td>
+                <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span></div></td>
+                <td><span class="badge compatible">Compatible</span></td>
+              </tr>
+              <tr>
+                <td class="product"><a href="toolbox/index.html?driver=m3-nrf&amp;display=uc8151-029-bwr&amp;power=battery-prim-2p">2.9" EL029H3WRA</a></td>
+                <td class="fcc">2AFWN-EL029H3WRA</td>
+                <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span></div></td>
+                <td><span class="badge compatible">Compatible</span></td>
+              </tr>
+
+              <tr class="platform">
+                <th scope="colgroup" colspan="4">M3 Silabs <span class="mcu">· EFR32BG22C222F352GM40</span></th>
+              </tr>
+              <tr>
+                <td class="product">1.6" BWRY EL016F5C4C</td>
+                <td class="fcc missing">—</td>
+                <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red, Yellow"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span><span class="color-patch" style="background-color:#ffeb3b" title="Yellow"></span></div></td>
+                <td><span class="badge wip">Work in progress</span></td>
+              </tr>
+              <tr>
+                <td class="product">2.2" BWRY EL022F6W4A</td>
+                <td class="fcc missing">—</td>
+                <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red, Yellow"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span><span class="color-patch" style="background-color:#ffeb3b" title="Yellow"></span></div></td>
+                <td><span class="badge wip">Work in progress</span></td>
+              </tr>
+              <tr>
+                <td class="product"><a href="toolbox/index.html?driver=m3-pro-silabs&amp;display=ep266yr-184x360&amp;power=battery-prim-2p">2.6" BWRY EL026F6W4A</a></td>
+                <td class="fcc">2AFWN-EL026F6W4A</td>
+                <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red, Yellow"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span><span class="color-patch" style="background-color:#ffeb3b" title="Yellow"></span></div></td>
+                <td><span class="badge compatible">Compatible</span></td>
+              </tr>
+              <tr>
+                <td class="product">2.9" BW Freezer EL029F3WRA</td>
+                <td class="fcc missing">—</td>
+                <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span></div></td>
+                <td><span class="badge wip">Work in progress</span></td>
+              </tr>
+              <tr>
+                <td class="product">2.9" BWRY EL029F5C4C</td>
+                <td class="fcc missing">—</td>
+                <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red, Yellow"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span><span class="color-patch" style="background-color:#ffeb3b" title="Yellow"></span></div></td>
+                <td><span class="badge wip">Work in progress</span></td>
+              </tr>
+              <tr>
+                <td class="product"><a href="toolbox/index.html?driver=m3-core-silabs&amp;display=ep35yr-184x384&amp;power=battery-prim-2p">3.5" BWRY EL035F5C4C</a></td>
+                <td class="fcc">2AFWN-EL035F5C4C</td>
+                <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red, Yellow"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span><span class="color-patch" style="background-color:#ffeb3b" title="Yellow"></span></div></td>
+                <td><span class="badge compatible">Compatible</span></td>
+              </tr>
+              <tr>
+                <td class="product">4.2" BWRY EL042F6W4A</td>
+                <td class="fcc missing">—</td>
+                <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red, Yellow"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span><span class="color-patch" style="background-color:#ffeb3b" title="Yellow"></span></div></td>
+                <td><span class="badge wip">Work in progress</span></td>
+              </tr>
+              <tr>
+                <td class="product">4.3" BWRY EL043F5C4C</td>
+                <td class="fcc missing">—</td>
+                <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red, Yellow"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span><span class="color-patch" style="background-color:#ffeb3b" title="Yellow"></span></div></td>
+                <td><span class="badge wip">Work in progress</span></td>
+              </tr>
+              <tr>
+                <td class="product">7.5" BWRY EL075F5CRC</td>
+                <td class="fcc missing">—</td>
+                <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red, Yellow"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span><span class="color-patch" style="background-color:#ffeb3b" title="Yellow"></span></div></td>
+                <td><span class="badge wip">Work in progress</span></td>
+              </tr>
+              <tr>
+                <td class="product">11.6" BWRY EL116F5CRC</td>
+                <td class="fcc missing">—</td>
+                <td class="colors"><div class="color-swatches" role="img" aria-label="Black, White, Red, Yellow"><span class="color-patch" style="background-color:#171717" title="Black"></span><span class="color-patch" style="background-color:#f4f4f5" title="White"></span><span class="color-patch" style="background-color:#b91c1c" title="Red"></span><span class="color-patch" style="background-color:#ffeb3b" title="Yellow"></span></div></td>
+                <td><span class="badge wip">Work in progress</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="col panel">
+        <h2>Flashing</h2>
+        <p class="tool-description">
+          Build and flash instructions for each MCU port (toolchain, SWD wiring, unlock steps) are in the
+          <a href="https://github.com/OpenDisplay/" target="_blank" rel="noopener noreferrer">OpenDisplay firmware repository</a>.
+          After programming, open the <a href="toolbox/index.html">Toolbox</a> to configure the device. If your panel
+          has a preset link in the table, use it after flashing so driver, panel, and power settings match your hardware.
+        </p>
+        <p class="tool-description">
+          A genuine Segger J-Link is strongly recommended; many clones are unreliable. To unlock the MCU for a full
+          erase and reflash you typically need J-Link hardware version 9 (V9) or newer.
+        </p>
+      </div>
     </div>
-  </div>
-  </article>
   </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="site-footer__top">
+        <div class="site-footer__brand">
+          <a href="../index.html" class="site-footer__lockup" aria-label="OpenDisplay home">
+            <img src="../assets/brand/logo_dark.svg" alt="OpenDisplay" class="site-footer__logo-full" width="140" height="41">
+          </a>
+          <span class="site-footer__tag">The open e-paper standard</span>
+          <p class="site-footer__lead">An open standard that lets any sender put pictures on any screen. Local, low-power, designed for e-paper.</p>
+        </div>
+        <div class="site-footer__col">
+          <span class="site-footer__col-h">Build</span>
+          <a href="../what-hardware-to-buy.html" class="od-foot-link">What hardware to buy</a>
+          <a href="display/index.html" class="od-foot-link">BLE Tester</a>
+          <a href="battery/index.html" class="od-foot-link">Battery calculator</a>
+        </div>
+        <div class="site-footer__col">
+          <span class="site-footer__col-h">Reference</span>
+          <a href="../protocol/index.html" class="od-foot-link">Protocol spec</a>
+          <a href="../protocol/display-data-format.html" class="od-foot-link">Display data format</a>
+          <a href="../protocol/flex-standard.html" class="od-foot-link">OpenDisplay Flex</a>
+        </div>
+        <div class="site-footer__col">
+          <span class="site-footer__col-h">Flex tools</span>
+          <a href="../protocol/flex-tools.html" class="od-foot-link">Overview</a>
+          <a href="toolbox/index.html" class="od-foot-link">Toolbox</a>
+          <a href="../protocol/adding-displays.html" class="od-foot-link">Adding a new panel</a>
+        </div>
+        <div class="site-footer__col">
+          <span class="site-footer__col-h">Community</span>
+          <a href="https://github.com/OpenDisplay/" target="_blank" rel="noreferrer" class="od-foot-link">GitHub</a>
+          <a href="https://discord.gg/XmTHz8RfJE" target="_blank" rel="noreferrer" class="od-foot-link">Discord</a>
+          <a href="https://www.openhomefoundation.org/" target="_blank" rel="noreferrer" class="od-foot-link">Open Home Foundation</a>
+        </div>
+      </div>
+      <div class="site-footer__bot">
+        <span>© 2026 OpenDisplay</span>
+        <div class="site-footer__legal">
+          <a href="../impressum.html" class="od-foot-link">Legal notice</a>
+          <a href="../datenschutz.html" class="od-foot-link">Privacy policy</a>
+        </div>
+      </div>
+    </div>
+  </footer>
 <script>
 (function () {
   var table = document.querySelector('.solum-display-table');

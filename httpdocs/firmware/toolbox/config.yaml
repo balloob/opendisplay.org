@@ -80,6 +80,12 @@ ble_proto:
           6:
             name: EFR32BG22C222F352GM40
             description: EFR32BG22C222F352GM40 based boards
+          7:
+            name: NRF54L15
+            description: Seeed XIAO nRF54L15 (Zephyr)
+          8:
+            name: NRF54LM20
+            description: Seeed XIAO nRF54LM20A (Zephyr)
       - name: communication_modes
         size: 1
         description: Supported communication modes (bitfield)
@@ -177,10 +183,10 @@ ble_proto:
             1:
               0:
                 name: EE04
-                description: XIAO ePaper Display EE04(ESP32-S3)
+                description: XIAO EE04(ESP32-S3)
               1:
                 name: EN04
-                description: XIAO ePaper Display EN04(NRF52840)
+                description: XIAO EN04(NRF52840)
               2:
                 name: ESP32_S3
                 description: XIAO ESP32-S3
@@ -195,46 +201,54 @@ ble_proto:
                 description: XIAO NRF52840
               6:
                 name: EE05
-                description: XIAO ePaper Display EE05(ESP32-S3)
+                description: XIAO EE05(ESP32-S3)
               7:
                 name: EN05
-                description: XIAO ePaper Display EN05(NRF52840)
+                description: XIAO EN05(NRF52840)
               8:
                 name: reTerminal_E1003
-                description: reTerminal E1003(ESP32-S3)
+                description: reTerminal E1003
               9:
                 name: reTerminal_Sticky
-                description: reTerminal Sticky (ESP32-S3, 3.97" ePaper)
+                description: reTerminal Sticky
+              10:
+                name: OpenDisplay_426_Mono_Kit
+                description: OpenDisplay 4.26" Mono Kit
+              11:
+                name: OpenDisplay_73_Color_Kit
+                description: OpenDisplay 7.3" Color Kit
+              12:
+                name: reTerminal_E1001
+                description: reTerminal E1001
+              13:
+                name: reTerminal_E1002
+                description: reTerminal E1002
             2:
               0:
                 name: ESP32_S3:PhotoPainter
-                description: Waveshare ESP32-S3-PhotoPainter
+                description: ESP32-S3-PhotoPainter
             3:
               0:
                 name: M3 NRF Lite
-                description: SOL M3 NRF52811 Lite
+                description: M3 NRF52811 Lite
               1:
                 name: M3 NRF
-                description: SOL M3 NRF52811
+                description: M3 NRF52811
               2:
                 name: M3 Silabs
-                description: SOL M3 Silabs
+                description: M3 Silabs
               3:
                 name: M3 Silabs Core
-                description: SOL M3 Silabs Core
+                description: M3 Silabs Core
               4:
                 name: M3 Silabs Pro
-                description: SOL M3 Silabs Pro
+                description: M3 Silabs Pro
               5:
                 name: M3 Silabs Lite
-                description: SOL M3 Silabs Lite
+                description: M3 Silabs Lite
               6:
                 name: M3 Silabs Peghook
-                description: SOL M3 Silabs Peghook
-            4:
-              0:
-                name: OD01
-                description: 2.2 BWR NRF52811
+                description: M3 Silabs Peghook
       - name: board_revision
         size: 1
         description: Board revision number

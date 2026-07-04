@@ -8,11 +8,41 @@
 
 // Packet sizes and offsets will be calculated dynamically from YAML
 
+const OPENDISPLAY_BLE_SERVICE_UUID = '00002446-0000-1000-8000-00805f9b34fb';
+// Company ID in BLE manufacturer data (same 0x2446 as the GATT service). All OpenDisplay
+// firmwares broadcast this in MSD; iOS WebKit often cannot see the name or service UUID
+// in the advertising packet (especially ESP32), but MSD is usually present.
+const OPENDISPLAY_MSD_COMPANY_ID = 0x2446;
+
+function normalizeBluetoothUuid(uuid) {
+  if (uuid == null || uuid === '') return OPENDISPLAY_BLE_SERVICE_UUID;
+  if (typeof uuid === 'string') {
+    const s = uuid.trim().toLowerCase();
+    if (s.includes('-')) return s;
+    const n = parseInt(s.replace(/^0x/i, ''), 16);
+    if (!Number.isNaN(n)) return normalizeBluetoothUuid(n);
+    return s;
+  }
+  if (typeof uuid === 'number') {
+    const hex = uuid.toString(16).padStart(4, '0');
+    return `0000${hex}-0000-1000-8000-00805f9b34fb`;
+  }
+  return String(uuid);
+}
+
+function bluetoothUuidShortLabel(uuid) {
+  const n = normalizeBluetoothUuid(uuid);
+  const m = n.match(/^0000([0-9a-f]{4})-/i);
+  return m ? ('0x' + m[1]) : n;
+}
+
 class OpenDisplayBLE {
   constructor(options = {}) {
     // Configuration
-    this.serviceUUID = options.serviceUUID || 0x2446;
-    this.characteristicUUID = options.characteristicUUID || 0x2446;
+    this.serviceUUID = normalizeBluetoothUuid(options.serviceUUID || OPENDISPLAY_BLE_SERVICE_UUID);
+    this.characteristicUUID = normalizeBluetoothUuid(
+      options.characteristicUUID || this.serviceUUID
+    );
     this.deviceNamePrefix = options.deviceNamePrefix || 'OD';
     this.maxReconnectAttempts = options.maxReconnectAttempts || 5;
     this.reconnectDelay = options.reconnectDelay || 2000;
@@ -357,6 +387,70 @@ class OpenDisplayBLE {
   }
   
   /**
+   * iOS WebKit (Bluefy) cannot reliably match name/service/manufacturer filters
+   * against ESP/nRF advertising packets — show every nearby device instead.
+   */
+  usesUnfilteredBleScan() {
+    return !!(typeof window !== 'undefined'
+      && window.OpenDisplayBrowser
+      && window.OpenDisplayBrowser.isIOS()
+      && window.OpenDisplayBrowser.isWebBluetoothSupported());
+  }
+
+  usesWebKitBleRequestDeviceWorkaround() {
+    return this.usesUnfilteredBleScan();
+  }
+
+  buildRequestDeviceOptionAttempts(prefix) {
+    const prefixes = prefix.split(',').map(p => p.trim()).filter(p => p);
+    const nameFilters = (prefixes.length ? prefixes : ['OD']).map(p => ({ namePrefix: p }));
+    const serviceUuid = this.serviceUUID;
+    const mfgFilter = {
+      manufacturerData: [{ companyIdentifier: OPENDISPLAY_MSD_COMPANY_ID }]
+    };
+    const serviceFilter = { services: [serviceUuid] };
+    const discoveryFilters = [mfgFilter, serviceFilter, ...nameFilters];
+
+    if (this.usesUnfilteredBleScan()) {
+      return [{
+        acceptAllDevices: true
+      }];
+    }
+
+    return [{
+      optionalServices: [serviceUuid],
+      filters: discoveryFilters
+    }];
+  }
+
+  isRequestDevicePayloadError(error) {
+    const msg = (error && error.message) ? error.message.toLowerCase() : '';
+    return msg.includes('payload') && msg.includes('pars');
+  }
+
+  async requestBleDevice(prefix) {
+    const attempts = this.buildRequestDeviceOptionAttempts(prefix);
+    let lastError = null;
+    for (let i = 0; i < attempts.length; i++) {
+      const deviceOptions = attempts[i];
+      try {
+        this.log(
+          `Requesting device (attempt ${i + 1}/${attempts.length}): ${JSON.stringify(deviceOptions)}`,
+          'info'
+        );
+        return await navigator.bluetooth.requestDevice(deviceOptions);
+      } catch (error) {
+        lastError = error;
+        if (!this.isRequestDevicePayloadError(error) || i === attempts.length - 1) {
+          throw error;
+        }
+        this.log(`requestDevice attempt ${i + 1} failed (${error.message}), retrying...`, 'warning');
+      }
+    }
+    throw lastError || new Error('Bluetooth device request failed');
+  }
+
+  /**
    * Request device and connect
    */
   async connect(deviceNamePrefix = null) {
@@ -370,23 +464,11 @@ class OpenDisplayBLE {
       throw new Error('Device name prefix required');
     }
     
-    const deviceOptions = {
-      optionalServices: [this.serviceUUID],
-      filters: prefix.split(',').map(p => p.trim()).filter(p => p).map(p => ({
-        namePrefix: p
-      }))
-    };
-    
-    if (deviceOptions.filters.length === 0) {
-      throw new Error('No valid device filters');
-    }
-    
     try {
       this.autoReconnectEnabled = true;
-      this.log(`Requesting device with filters: ${JSON.stringify(deviceOptions.filters)}`, 'info');
       this.setStatus('Requesting device...', false);
       
-      this.device = await navigator.bluetooth.requestDevice(deviceOptions);
+      this.device = await this.requestBleDevice(prefix);
       this.log(`Found: ${this.device.name || 'Unknown device'} (${this.device.id})`, 'success');
       this.setStatus(`Found ${this.device.name || 'device'}`, false);
       
@@ -535,14 +617,14 @@ class OpenDisplayBLE {
       this.log(`GATT Server state: connected=${this.gattServer.connected}`, 'info');
       
       this.service = await this.gattServer.getPrimaryService(this.serviceUUID);
-      this.log(`Service 0x${this.serviceUUID.toString(16)} found`, 'success');
+      this.log(`Service ${bluetoothUuidShortLabel(this.serviceUUID)} found`, 'success');
       
       // Get characteristic with encryption retry logic
       // This will automatically wait for encryption if the characteristic requires it
       this.log('Accessing characteristic (encryption will be established if needed)...', 'info');
       try {
         this.characteristic = await this.waitForEncryptionAndGetCharacteristic(5, 200);
-        this.log(`Characteristic 0x${this.characteristicUUID.toString(16)} found`, 'success');
+        this.log(`Characteristic ${bluetoothUuidShortLabel(this.characteristicUUID)} found`, 'success');
       } catch (charError) {
         this.log(`Failed to get characteristic: ${charError.name} - ${charError.message}`, 'error');
         this.log(`Error details: code=${charError.code}, stack=${charError.stack}`, 'error');
@@ -4224,4 +4306,138 @@ function getDisplayLayoutFromSimplePresetsDb(db, displayId) {
     height: h,
     colorScheme: Number.isNaN(cs) ? 0 : cs
   };
+}
+
+/**
+ * Browser/platform helpers for Web Bluetooth and USB firmware install.
+ */
+const OpenDisplayBrowser = {
+  isIOS() {
+    const ua = navigator.userAgent || '';
+    return /iPad|iPhone|iPod/i.test(ua)
+      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  },
+  isBluefy() {
+    return /Bluefy/i.test(navigator.userAgent || '');
+  },
+  isAndroid() {
+    return /Android/i.test(navigator.userAgent || '');
+  },
+  isFirefox() {
+    return /Firefox|FxiOS/i.test(navigator.userAgent || '') && !this.isBluefy();
+  },
+  isEdge() {
+    return /Edg\//.test(navigator.userAgent || '');
+  },
+  isChromium() {
+    if (this.isBluefy()) return false;
+    const ua = navigator.userAgent || '';
+    return /Chrom(e|ium)|Edg\//.test(ua) && !/Firefox|FxiOS|Bluefy/i.test(ua);
+  },
+  isWebBluetoothSupported() {
+    return !!(navigator.bluetooth && typeof navigator.bluetooth.requestDevice === 'function');
+  },
+  isUsbFirmwareInstallSupported() {
+    if (this.isIOS()) return false;
+    return !!(navigator.serial || navigator.usb);
+  },
+  canConfigureOverBle() {
+    return this.isWebBluetoothSupported();
+  },
+  getWebBluetoothBlockReason() {
+    if (this.isWebBluetoothSupported()) return null;
+    if (this.isIOS() && !this.isBluefy()) return 'ios-safari';
+    if (this.isFirefox()) return 'firefox';
+    if (typeof window !== 'undefined' && !window.isSecureContext) return 'insecure';
+    if (this.isChromium()) return 'chromium-disabled';
+    return 'unsupported';
+  },
+  firefoxWebBluetoothMessage() {
+    return 'Firefox does not support Web Bluetooth.\n\n'
+      + 'Use Google Chrome, Microsoft Edge, or another Chromium-based browser on desktop or Android.\n'
+      + 'On iPhone or iPad, use the Bluefy app from the App Store.';
+  },
+  chromiumBluetoothSettingsUrl() {
+    return this.isEdge()
+      ? 'edge://settings/content/bluetooth'
+      : 'chrome://settings/content/bluetooth';
+  },
+  chromiumWebBluetoothDisabledMessage() {
+    const browserName = this.isEdge() ? 'Microsoft Edge' : 'Google Chrome';
+    const settingsUrl = this.chromiumBluetoothSettingsUrl();
+    return 'Web Bluetooth is disabled or blocked in ' + browserName + '.\n\n'
+      + 'To enable it:\n'
+      + '1. Open Settings → Privacy and security → Site settings → Bluetooth\n'
+      + '2. Choose “Sites can ask to connect to devices” (not “Don’t allow sites…”)\n'
+      + '3. Turn on Bluetooth in your system settings\n\n'
+      + 'Quick link (paste into the address bar):\n' + settingsUrl;
+  },
+  webBluetoothAdapterUnavailableMessage() {
+    let msg = 'Bluetooth is not available on this device.\n\n'
+      + 'Turn on Bluetooth in your system settings.';
+    if (this.isChromium()) {
+      msg += '\n\nIn ' + (this.isEdge() ? 'Edge' : 'Chrome')
+        + ', also check Settings → Privacy and security → Site settings → Bluetooth.\n'
+        + this.chromiumBluetoothSettingsUrl();
+    }
+    return msg;
+  },
+  webBluetoothUnsupportedMessage() {
+    const reason = this.getWebBluetoothBlockReason();
+    if (reason === 'ios-safari') {
+      return 'Web Bluetooth is not supported in Safari.\n\n'
+        + 'On iPhone or iPad, open this page in the Bluefy app from the App Store.';
+    }
+    if (reason === 'firefox') {
+      return this.firefoxWebBluetoothMessage();
+    }
+    if (reason === 'insecure') {
+      return 'Web Bluetooth requires a secure connection (HTTPS).\n\n'
+        + 'Open this site with https:// in the address bar.';
+    }
+    if (reason === 'chromium-disabled') {
+      return this.chromiumWebBluetoothDisabledMessage();
+    }
+    return 'Web Bluetooth is not supported in this browser.\n\n'
+      + 'Use Chrome, Edge, or another Chromium-based browser on desktop or Android. '
+      + 'On iPhone or iPad, open this page in the Bluefy app from the App Store.';
+  },
+  recommendedBrowserHint() {
+    if (this.isBluefy()) {
+      return 'Using Bluefy — Bluetooth configuration is supported.';
+    }
+    if (this.isIOS()) {
+      return 'On iPhone or iPad, open this page in the Bluefy browser app for Bluetooth configuration. '
+        + 'USB firmware install requires Chrome or Edge on a computer.';
+    }
+    if (this.isFirefox()) {
+      return 'Firefox does not support Web Bluetooth — use Chrome, Edge, or Bluefy on iOS.';
+    }
+    if (this.getWebBluetoothBlockReason() === 'chromium-disabled') {
+      return 'Web Bluetooth is disabled in your browser — enable it in site settings.';
+    }
+    return 'Use Chrome or Edge on desktop or Android. On iPhone or iPad, use Bluefy for Bluetooth.';
+  },
+  async ensureWebBluetoothAvailable() {
+    if (!this.isWebBluetoothSupported()) {
+      alert(this.webBluetoothUnsupportedMessage());
+      return false;
+    }
+    if (navigator.bluetooth.getAvailability) {
+      try {
+        const available = await navigator.bluetooth.getAvailability();
+        if (!available) {
+          alert(this.webBluetoothAdapterUnavailableMessage());
+          return false;
+        }
+      } catch (e) {
+        // getAvailability unavailable or failed — proceed to requestDevice
+      }
+    }
+    return true;
+  }
+};
+
+if (typeof window !== 'undefined') {
+  window.OpenDisplayBrowser = OpenDisplayBrowser;
 }

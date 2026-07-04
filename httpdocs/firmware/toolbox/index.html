@@ -5,653 +5,17 @@
   <link rel="stylesheet" href="../../css/colors_and_type.css">
   <link rel="stylesheet" href="../../css/inner.css">
   <link rel="stylesheet" href="../../css/tool-ui.css">
+  <link rel="stylesheet" href="../../css/toolbox.css">
+
 
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OpenDisplay Toolbox</title>
 <style>
-/* Page-specific styles */
-.tool-page > .container > h1{
-  text-align:center;
-  margin:0 0 16px;
-  width:100%;
-}
-.toolbox-intro{
-  max-width:640px;
-  margin:0 auto 24px;
-  text-align:center;
-}
-.toolbox-requirements{
-  margin:0;
-  padding:0;
-  list-style:none;
-  font-size:0.875rem;
-  line-height:1.5;
-  color:var(--muted-foreground);
-}
-.toolbox-requirements li{margin:4px 0}
-.toolbox-requirements a{color:var(--accent);text-decoration:underline}
-.toolbox-step{
-  margin-bottom:28px;
-  padding-bottom:0;
-  scroll-margin-top:16px;
-}
-.toolbox-step:last-child{margin-bottom:0}
-.toolbox-step--more{padding-bottom:0;margin-bottom:16px}
-.toolbox-step__title{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  margin:0 0 8px;
-  font-size:1.05rem;
-  font-weight:600;
-  color:var(--foreground);
-  font-family:var(--font-sans);
-}
-.toolbox-step__num{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  width:26px;
-  height:26px;
-  border-radius:50%;
-  background:var(--accent);
-  color:var(--accent-button);
-  font-size:0.8rem;
-  font-weight:700;
-  flex-shrink:0;
-}
-.toolbox-step__hint{
-  margin:0 0 14px;
-  font-size:0.875rem;
-  line-height:1.45;
-  color:var(--muted-foreground);
-}
-.toolbox-step__hint--presets{
-  font-weight:500;
-  color:var(--foreground);
-}
-.toolbox-or{
-  margin:16px 0 12px;
-  font-size:0.8rem;
-  font-weight:600;
-  letter-spacing:0.04em;
-  text-transform:uppercase;
-  color:var(--muted-foreground);
-  text-align:center;
-}
-.toolbox-checklist{
-  margin:0 0 14px;
-  padding:10px 12px;
-  list-style:none;
-  background:var(--card-background);
-  border:1px solid var(--border-color);
-  border-radius:8px;
-  font-size:0.875rem;
-}
-.toolbox-checklist__item{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  padding:4px 0;
-  color:var(--muted-foreground);
-}
-.toolbox-checklist__item--done{color:var(--foreground)}
-.toolbox-checklist__mark{
-  width:1.1em;
-  flex-shrink:0;
-  font-weight:700;
-  color:var(--muted-foreground);
-}
-.toolbox-checklist__item--done .toolbox-checklist__mark{color:#3fb950}
-.toolbox-status{
-  margin:0 0 12px;
-  padding:10px 12px;
-  border-radius:8px;
-  font-size:0.875rem;
-  line-height:1.45;
-  background:var(--card-background);
-  border:1px solid var(--border-color);
-  color:var(--muted-foreground);
-}
-.toolbox-status--ready{
-  border-color:var(--accent);
-  color:var(--foreground);
-  background:rgba(0,191,255,.06);
-}
-.toolbox-status--success{
-  border-color:#3fb950;
-  color:var(--foreground);
-  background:rgba(63,185,80,.08);
-}
-.toolbox-status--pending{color:var(--muted-foreground)}
-.toolbox-status--busy{
-  border-color:var(--accent);
-  color:var(--foreground);
-}
-.encryption-hint{
-  margin:8px 0 0;
-  font-size:0.8rem;
-  line-height:1.4;
-  color:var(--muted-foreground);
-}
-.toolbox-advanced{
-  margin-top:8px;
-  padding-top:0;
-}
-.toolbox-advanced__label{
-  margin:0 0 10px;
-  font-size:0.75rem;
-  font-weight:600;
-  letter-spacing:0.06em;
-  text-transform:uppercase;
-  color:var(--muted-foreground);
-  font-family:var(--font-sans);
-}
-.toolbox-advanced .ble-actions{margin-top:8px}
-.toolbox-advanced .toolbox-advanced-btn{
-  width:100%;
-  margin:0;
-  background:transparent!important;
-  color:var(--muted-foreground)!important;
-  border:1px solid var(--border-color)!important;
-  box-shadow:none!important;
-  font-size:13px!important;
-  padding:8px 14px!important;
-}
-.toolbox-advanced .toolbox-advanced-btn:hover{
-  background:var(--card-background)!important;
-  color:var(--foreground)!important;
-  border-color:var(--accent)!important;
-  transform:none!important;
-  box-shadow:none!important;
-}
-#premadeConfigSection #presetGrid{margin-top:0}
-label{font-weight:600;font-size:1.1rem;color:var(--foreground);margin-bottom:16px;display:block}
-textarea,input,select,button{
-  font-family:var(--font-mono)
-}
-textarea{
-  width:100%;height:220px;background:var(--card-background);border:1.5px solid var(--border-color);border-radius:8px;
-  padding:12px;color:var(--foreground);font-size:14px;line-height:1.5;resize:vertical
-}
-textarea:focus{
-  outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,191,255,.1)
-}
-button{
-  background:var(--accent);
-  border:none;border-radius:8px;padding:10px 16px;margin:4px 6px 4px 0;
-  color:var(--accent-button);font-weight:500;cursor:pointer;transition:.2s;font-size:14px
-}
-button:hover{background:var(--accent-hover);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,191,255,.3)}
-button:active{transform:none}
-button.incomplete{
-  opacity:0.5;cursor:pointer;background:#6b7280
-}
-button.incomplete:hover{
-  background:#6b7280;transform:none;box-shadow:none
-}
-.status-display,.packet-length-indicator,.bytes-counter{
-  background:var(--card-background);border:1px solid var(--border-color);border-radius:6px;
-  font-family:var(--font-mono)
-}
-.bytes{
-  color:var(--foreground);padding:16px;white-space:pre-wrap;font-size:13px;line-height:1.4;
-  max-height:300px;overflow-y:auto;background:var(--card-background);border:1px solid var(--border-color);border-radius:8px
-}
-.field-row{display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
-.small{font-size:.85rem;color:#8b949e;margin-top:8px}
-.chip{
-  border-radius:20px;background:var(--accent);
-  color:var(--accent-button);padding:4px 12px;margin-right:8px;font-size:12px;font-weight:500
-}
-.danger{color:#f85149}
-.bit-flags{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.bit-flag{
-  display:flex;flex-direction:column;align-items:center;font-size:11px;flex:1;min-width:48px
-}
-.bit-flag input[type=checkbox]{
-  transform:scale(1.4);accent-color:var(--accent);background:var(--card-background)!important;
-  border:1px solid var(--border-color)!important;width:20px;height:20px;
-  appearance:none;cursor:pointer
-}
-.bit-flag input[type=checkbox]:checked{
-  background:var(--accent)!important;border-color:var(--accent)!important;position:relative
-}
-.bit-flag input[type=checkbox]:checked::after{
-  content:"✓";position:absolute;top:50%;left:50%;
-  transform:translate(-50%,-50%);color:var(--accent-button);font-size:10px;font-weight:700
-}
-.bit-flag input[type=checkbox]:focus{
-  outline:none;border-color:var(--accent)!important;box-shadow:0 0 0 2px rgba(0,191,255,.2)
-}
-.bit-flag input[type=checkbox]:hover{border-color:#555!important}
-.bit-label{font-size:10px;text-align:center;color:var(--muted-foreground);margin-top:4px}
-input[type=text],input[type=number],select,
-.field-row input:not([type=checkbox]):not([type=radio]),.packet-card input:not([type=checkbox]):not([type=radio]),input[style*="flex"]{
-  background:var(--card-background)!important;border:1.5px solid var(--border-color)!important;border-radius:6px!important;
-  padding:8px 12px!important;color:var(--foreground)!important;font-size:14px!important;
-  font-family:var(--font-mono)!important;
-  min-height:40px!important;transition:.2s;appearance:none
-}
-.encryption-option{
-  margin-top:12px;
-  padding:0;
-  background:transparent;
-  border:none;
-  color-scheme:light;
-}
-.encryption-slider-wrap{
-  position:relative;
-  width:100%;
-}
-.encryption-slider-icon{
-  position:absolute;
-  top:50%;
-  width:18px;
-  height:18px;
-  pointer-events:none;
-  z-index:3;
-  transition:left .15s ease,color .2s ease,transform .15s ease;
-}
-.encryption-slider-icon--left{
-  color:var(--enc-icon-left-color,var(--muted-foreground));
-}
-.encryption-slider-icon--right{
-  color:var(--enc-icon-right-color,var(--muted-foreground));
-}
-.encryption-slider-input{
-  -webkit-appearance:none;
-  appearance:none;
-  display:block;
-  width:100%;
-  height:36px;
-  margin:0;
-  padding:0;
-  border:none;
-  background:transparent;
-  cursor:pointer;
-}
-.encryption-slider-input:focus{
-  outline:none;
-}
-.encryption-slider-input:focus-visible::-webkit-slider-thumb{
-  box-shadow:0 2px 8px rgba(0,0,0,.15),0 0 0 3px rgba(0,191,255,.25);
-}
-.encryption-slider-input:focus-visible::-moz-range-thumb{
-  box-shadow:0 2px 8px rgba(0,0,0,.15),0 0 0 3px rgba(0,191,255,.25);
-}
-.encryption-slider-input::-webkit-slider-runnable-track{
-  height:36px;
-  border-radius:999px;
-  background:var(--enc-track,var(--od-paper-3,#d8d4cc));
-  transition:background .2s ease;
-}
-.encryption-slider-input::-moz-range-track{
-  height:36px;
-  border-radius:999px;
-  background:var(--enc-track,var(--od-paper-3,#d8d4cc));
-  border:none;
-  transition:background .2s ease;
-}
-.encryption-slider-input::-webkit-slider-thumb{
-  -webkit-appearance:none;
-  width:32px;
-  height:32px;
-  margin-top:2px;
-  border-radius:50%;
-  background:#fff;
-  box-shadow:0 2px 8px rgba(0,0,0,.16);
-  transition:transform .15s ease,box-shadow .15s ease;
-}
-.encryption-slider-input::-moz-range-thumb{
-  width:32px;
-  height:32px;
-  border:none;
-  border-radius:50%;
-  background:#fff;
-  box-shadow:0 2px 8px rgba(0,0,0,.16);
-  transition:transform .15s ease,box-shadow .15s ease;
-}
-.encryption-slider-input:active::-webkit-slider-thumb{
-  transform:scale(.96);
-}
-.encryption-slider-input:active::-moz-range-thumb{
-  transform:scale(.96);
-}
-@media (prefers-color-scheme:dark){
-  .encryption-option{
-    color-scheme:dark;
-  }
-  .encryption-slider-input::-webkit-slider-thumb,
-  .encryption-slider-input::-moz-range-thumb{
-    background:#f5f5f5;
-    box-shadow:0 2px 10px rgba(0,0,0,.35);
-  }
-}
-.esp-deep-sleep-option{
-  margin-top:12px;
-  padding:12px 14px;
-  background:var(--card-background);
-  border:1px solid var(--border-color);
-  border-radius:8px;
-}
-.esp-deep-sleep-option label{
-  display:block;
-  font-weight:500;
-  font-size:0.95rem;
-  margin:0 0 10px;
-  color:var(--foreground);
-}
-.esp-deep-sleep-row{
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-.esp-deep-sleep-row input[type=range]{
-  flex:1;
-  min-width:0;
-  accent-color:var(--accent);
-}
-.esp-deep-sleep-value{
-  font-family:var(--font-mono);
-  font-size:0.85rem;
-  color:var(--foreground);
-  min-width:4.5em;
-  text-align:right;
-  cursor:pointer;
-  background:transparent;
-  border:1px solid var(--border-color);
-  border-radius:6px;
-  padding:4px 8px;
-  line-height:1.2;
-}
-.esp-deep-sleep-value:hover{
-  border-color:var(--accent);
-  color:var(--accent);
-}
-.esp-deep-sleep-minutes{
-  width:4.5em;
-  min-width:4.5em;
-  min-height:32px;
-  padding:4px 8px!important;
-  font-family:var(--font-mono)!important;
-  font-size:0.85rem!important;
-  text-align:right;
-}
-input:focus:not([type=checkbox]):not([type=radio]),select:focus{
-  outline:none!important;border-color:var(--accent)!important;
-  box-shadow:0 0 0 3px rgba(0,191,255,.1)!important;background:var(--card-background)!important
-}
-input:hover:not([type=checkbox]):not([type=radio]),select:hover{border-color:var(--accent)!important;background:var(--card-background)!important}
-input[type=checkbox]:focus-visible{
-  outline:2px solid var(--accent);
-  outline-offset:2px;
-}
-input::placeholder{color:#8b949e!important}
-select{
-  background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b949e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'/%3e%3c/svg%3e")!important;
-  background-repeat:no-repeat!important;background-position:right 8px center!important;
-  background-size:16px!important;padding-right:32px!important
-}
-select option{background:#ffffff!important;color:#1a1a1a!important;padding:8px 12px!important}
-input[type=file]{background:var(--card-background)!important;border:1.5px solid var(--border-color)!important;
-  border-radius:6px!important;padding:8px 12px!important;color:var(--foreground)!important;font-size:14px!important
-}
-#versionInfo{color:#00bfff;font-weight:500}
-#crcNote,#parseResult{color:#8b949e;font-style:italic}
-.ble-controls{display:flex;flex-direction:column;gap:16px}
-.ble-input-group,.ble-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
-.ble-input-group label{font-size:.9rem;margin:0;min-width:120px}
-.ble-input-group input[type=text]{flex:1;min-width:200px}
-.remember-group{display:flex;align-items:center;gap:6px}
-.remember-group label{font-size:.85rem;margin:0}
-.ble-actions button{flex:1;min-width:120px}
-.status-display{padding:12px;min-height:100px}
-.status-text{font-weight:600;color:#f85149;margin-bottom:8px}
-.status-text.connected{color:#3fb950}
-.log-display{
-  font-family:var(--font-mono);
-  font-size:12px;color:#8b949e;max-height:200px;overflow-y:auto;white-space:pre-wrap
-}
-.log-entry{margin-bottom:2px}
-.log-entry.error{color:#f85149}
-.log-entry.success{color:#3fb950}
-.log-entry.info{color:#58a6ff}
-.packet-length-indicator,.bytes-counter{
-  padding:8px 12px;margin:8px 0;font-size:12px;color:#8b949e
-}
-.packet-length-info,.bytes-stats{
-  display:flex;justify-content:space-between;align-items:center;margin-bottom:4px
-}
-.packet-size,.bytes-count,.packet-size-inline{color:#00bfff;font-weight:600}
-.packet-size-inline{font-size:1rem;margin-left:8px}
-.usage-bar-container{
-  width:100%;height:8px;background:#f3f4f6;border-radius:4px;
-  overflow:hidden;margin:4px 0
-}
-.usage-bar{
-  height:100%;transition:width .3s,background-color .3s;border-radius:4px
-}
-.usage-bar.good{background:#3fb950}
-.usage-bar.warning{background:#d29922}
-.usage-bar.danger{background:#f85149}
-.usage-bar.over-limit{background:#da3633;animation:pulse 1s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
-.usage-text{font-size:11px;color:#8b949e;text-align:right}
-.usage-warning{color:#f85149}
-.usage-good{color:#3fb950}
-.usage-warning-text{color:#d29922;font-weight:600}
-.usage-danger-text{color:#f85149;font-weight:600}
-.usage-over-limit{color:#da3633;font-weight:700;animation:pulse 1s infinite}
-.warning-message{
-  background:#da3633;color:#fff;padding:8px 12px;border-radius:6px;
-  margin-top:8px;font-weight:600;text-align:center;animation:pulse 1s infinite
-}
-/* Tooltip styles */
-.tooltip-wrapper {
-  position: relative;
-  display: inline-block;
-  margin-left: 6px;
-  vertical-align: middle;
-}
-.tooltip-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: var(--accent-button);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: help;
-  transition: all 0.2s;
-  user-select: none;
-}
-.tooltip-icon:hover {
-  background: var(--accent-hover);
-  transform: scale(1.1);
-}
-.tooltip-content {
-  visibility: hidden;
-  opacity: 0;
-  position: absolute;
-  bottom: 125%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--card-background);
-  color: var(--foreground);
-  padding: 12px 16px;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  white-space: normal;
-  width: 280px;
-  max-width: calc(100vw - 40px);
-  font-size: 13px;
-  line-height: 1.5;
-  z-index: 1000;
-  transition: opacity 0.2s, visibility 0.2s;
-  pointer-events: none;
-}
-@media (max-width: 768px) {
-  .tooltip-content {
-    width: 240px;
-    font-size: 12px;
-    padding: 10px 12px;
-  }
-}
-.tooltip-content::after {
-  content: "";
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 6px solid transparent;
-  border-top-color: var(--card-background);
-}
-.tooltip-wrapper:hover .tooltip-content,
-.tooltip-wrapper:focus-within .tooltip-content {
-  visibility: visible;
-  opacity: 1;
-}
-.tooltip-content strong {
-  color: var(--accent);
-  display: block;
-  margin-bottom: 6px;
-  font-size: 14px;
-}
-.tooltip-content ul {
-  margin: 8px 0 0 0;
-  padding-left: 20px;
-}
-.tooltip-content li {
-  margin: 4px 0;
-}
-.preset-option:hover{
-  border-color:var(--accent);
-  transform:translateY(-1px);
-  box-shadow:0 4px 12px rgba(0,191,255,.3)
-}
-.preset-option:active{transform:none}
-.preset-option.selected{
-  background:var(--accent);
-  border-color:var(--accent);
-  box-shadow:0 0 0 3px rgba(0,191,255,.2),0 4px 12px rgba(0,191,255,.3);
-  transform:translateY(-1px)
-}
-.preset-option.selected label{color:var(--accent-button)}
-@media (max-width: 768px) {
-  #presetGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-@media (max-width: 480px) {
-  #presetGrid {
-    grid-template-columns: 1fr;
-  }
-}
-.packet-card{
-  background:var(--card-background);border:1px solid var(--border-color);border-radius:8px;
-  padding:16px;margin:8px 0;box-shadow:0 1px 2px rgba(0,0,0,.05);transition:.2s
-}
-.packet-card:hover{border-color:var(--accent);box-shadow:0 4px 6px rgba(0,0,0,.1), 0 2px 4px rgba(0,0,0,.06)}
-.packet-header{
-  display:flex;justify-content:space-between;align-items:center;
-  padding-bottom:12px;border-bottom:1px solid var(--border-color);margin-bottom:16px
-}
-.packet-title{display:flex;align-items:center;gap:8px}
-.packet-id{
-  background:var(--accent);
-  color:var(--accent-button);padding:2px 8px;border-radius:12px;font-size:.75rem;font-weight:600
-}
-.packet-actions{display:flex;gap:8px;align-items:center}
-.auto-install-panel{
-  background:var(--card-background);border:2px solid var(--accent);border-radius:12px;padding:24px;
-  box-shadow:0 1px 3px rgba(0,0,0,.1), 0 1px 2px rgba(0,0,0,.06);margin-top:20px;display:none
-}
-.auto-install-panel.show{display:block}
-.auto-install-panel h3{
-  color:var(--foreground);font-size:1.3rem;font-weight:600;margin-top:0;margin-bottom:12px
-}
-.auto-install-panel p{
-  color:var(--muted-foreground);margin-bottom:16px;line-height:1.6
-}
-.auto-install-actions{
-  display:flex;gap:12px;flex-wrap:wrap
-}
-.auto-install-actions button{
-  width:100%;margin:0
-}
-#openBleTesterBtn{
-  display:none
-}
-a {
-  color: #6b7280;
-  text-decoration: none;
-  transition: color 0.2s;
-}
-a:hover {
-  color: #00bfff;
-  text-decoration: underline;
-}
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 1000;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  align-items: center;
-  justify-content: center;
-}
-.modal.show {
-  display: flex;
-}
-.modal-content {
-  background: var(--card-background);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 32px;
-  max-width: 500px;
-  width: 90%;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+.page-inner.tool-ui .tool-page > .container > h1 {
   text-align: center;
-}
-.modal-content h3 {
-  margin-top: 0;
-  color: var(--foreground);
-  font-size: 1.5rem;
-}
-.modal-content p {
-  color: var(--muted-foreground);
-  margin-bottom: 24px;
-  line-height: 1.6;
-}
-.modal-buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 24px;
-}
-.modal-buttons .btn {
+  margin: 0 0 16px;
   width: 100%;
-  margin: 0;
-}
-.close {
-  color: var(--muted-foreground);
-  float: right;
-  font-size: 28px;
-  font-weight: bold;
-  cursor: pointer;
-  line-height: 20px;
-}
-.close:hover {
-  color: var(--foreground);
 }
 </style>
   <script src="/js/js-yaml.min.js"></script>
@@ -777,12 +141,14 @@ a:hover {
 <h1>OpenDisplay Toolbox</h1>
 
 <div class="toolbox-intro">
-  <ul class="toolbox-requirements">
-    <li>Use <strong>Chrome</strong> or <strong>Edge</strong></li>
+  <ul class="toolbox-requirements" id="toolboxRequirements">
+    <li>Use <strong>Chrome</strong> or <strong>Edge</strong> on desktop or Android</li>
+    <li>On iPhone or iPad, use the <strong>Bluefy</strong> app for Bluetooth configuration</li>
     <li>USB cable for firmware install</li>
     <li>Bluetooth for configuration (device powered on and in range)</li>
     <li>Don't have hardware yet? <a href="../../what-hardware-to-buy.html">See what to buy</a></li>
   </ul>
+  <div id="toolboxIosBleBanner" class="toolbox-ios-banner" style="display: none;" role="status"></div>
 </div>
 
     <div class="col panel" id="bleConnectionPanel" style="display: none;">
@@ -804,7 +170,7 @@ a:hover {
             <span class="tooltip-icon">?</span>
             <span class="tooltip-content">
               <strong>Device Filter</strong>
-              Enter the name prefix of your OpenDisplay device (e.g., "OD"). This helps filter BLE devices during scanning. You can enter multiple prefixes separated by commas.
+              Enter the name prefix of your OpenDisplay device (e.g., "OD"). Devices are also matched by OpenDisplay manufacturer data (0x2446) and the BLE service UUID. You can enter multiple prefixes separated by commas.
             </span>
           </span>
         </label>
@@ -870,6 +236,30 @@ a:hover {
         </div>
         <label style="font-weight: 500; font-size: 14px; margin: 0; padding: 12px; text-align: center; color: var(--foreground); cursor: pointer;">reTerminal E1003</label>
       </div>
+      
+      <div class="preset-option" data-preset="reterminal-sticky" style="border-radius: 8px; border: 1px solid var(--border-color); padding: 0; background: var(--card-background); transition: all 0.2s ease; cursor: pointer; display: flex; flex-direction: column; align-items: stretch; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); overflow: hidden;">
+        <div style="width: 100%; aspect-ratio: 16 / 9; background: var(--card-background); display: block; overflow: hidden; position: relative;">
+          <img src="img/RTsticky.jpg" alt="reTerminal sticky" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;">
+        </div>
+        <label style="font-weight: 500; font-size: 14px; margin: 0; padding: 12px; text-align: center; color: var(--foreground); cursor: pointer;">reTerminal sticky</label>
+      </div>
+      
+      
+            <div class="preset-option" data-preset="426kit" style="border-radius: 8px; border: 1px solid var(--border-color); padding: 0; background: var(--card-background); transition: all 0.2s ease; cursor: pointer; display: flex; flex-direction: column; align-items: stretch; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); overflow: hidden;">
+        <div style="width: 100%; aspect-ratio: 16 / 9; background: var(--card-background); display: block; overflow: hidden; position: relative;">
+          <img src="img/426kit.jpg" alt="reTerminal sticky" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;">
+        </div>
+        <label style="font-weight: 500; font-size: 14px; margin: 0; padding: 12px; text-align: center; color: var(--foreground); cursor: pointer;">OpenDisplay 4.26" Mono Kit</label>
+      </div>
+      
+            <div class="preset-option" data-preset="73kit" style="border-radius: 8px; border: 1px solid var(--border-color); padding: 0; background: var(--card-background); transition: all 0.2s ease; cursor: pointer; display: flex; flex-direction: column; align-items: stretch; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); overflow: hidden;">
+        <div style="width: 100%; aspect-ratio: 16 / 9; background: var(--card-background); display: block; overflow: hidden; position: relative;">
+          <img src="img/73kit.jpg" alt="reTerminal sticky" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;">
+        </div>
+        <label style="font-weight: 500; font-size: 14px; margin: 0; padding: 12px; text-align: center; color: var(--foreground); cursor: pointer;">OpenDisplay 7.3" Color Kit</label>
+      </div>
+      
+      
       <div class="preset-option" data-preset="esp32-s3-wspp" style="border-radius: 8px; border: 1px solid var(--border-color); padding: 0; background: var(--card-background); transition: all 0.2s ease; cursor: pointer; display: flex; flex-direction: column; align-items: stretch; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); overflow: hidden;">
         <div style="width: 100%; aspect-ratio: 16 / 9; background: var(--card-background); display: block; overflow: hidden; position: relative;">
           <img src="img/WSPPS3.jpg" alt="Waveshare ESP32-S3-PhotoPainter" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;">
@@ -1040,6 +430,103 @@ a:hover {
 <script src="/js/ble-common.js"></script>
 <script>
 let bleLib = null;
+
+function isToolboxBleOnlyMode() {
+  return window.OpenDisplayBrowser
+    && window.OpenDisplayBrowser.isWebBluetoothSupported()
+    && !window.OpenDisplayBrowser.isUsbFirmwareInstallSupported();
+}
+
+function toolboxSkipsUsbFirmwareStep() {
+  return isToolboxBleOnlyMode();
+}
+
+async function ensureWebBluetoothAvailable() {
+  if (window.OpenDisplayBrowser && typeof window.OpenDisplayBrowser.ensureWebBluetoothAvailable === 'function') {
+    return window.OpenDisplayBrowser.ensureWebBluetoothAvailable();
+  }
+  if (window.OpenDisplayBrowser && window.OpenDisplayBrowser.isWebBluetoothSupported()) {
+    return true;
+  }
+  const msg = window.OpenDisplayBrowser
+    ? window.OpenDisplayBrowser.webBluetoothUnsupportedMessage()
+    : 'Web Bluetooth is not supported in this browser.';
+  alert(msg);
+  return false;
+}
+
+function adaptToolboxForPlatform() {
+  const b = window.OpenDisplayBrowser;
+  if (!b) return;
+
+  const req = document.getElementById('toolboxRequirements');
+  const iosBanner = document.getElementById('toolboxIosBleBanner');
+  const step2 = document.getElementById('toolboxStep2');
+  const step2Hint = step2 ? step2.querySelector('.toolbox-step__hint') : null;
+  const step3Hint = document.querySelector('#toolboxStep3 .toolbox-step__hint');
+  const checkFirmware = document.getElementById('checkFirmware');
+  const buyLink = '<li>Don\'t have hardware yet? <a href="../../what-hardware-to-buy.html">See what to buy</a></li>';
+  const bluefyStoreLink = '<a href="https://apps.apple.com/app/bluefy-web-ble-browser/id1492820575" rel="noopener noreferrer">Get Bluefy</a>';
+
+  if (b.isBluefy()) {
+    if (req) {
+      req.innerHTML = [
+        '<li>Using <strong>Bluefy</strong> — Bluetooth configuration is supported on this device</li>',
+        '<li>Install firmware over USB from a computer with Chrome or Edge (not available in Bluefy)</li>',
+        '<li>Power on your OpenDisplay and enable Bluetooth</li>',
+        buyLink
+      ].join('');
+    }
+    if (iosBanner) iosBanner.style.display = 'none';
+    if (step2) step2.style.display = 'none';
+    if (step3Hint) {
+      step3Hint.textContent = 'Power on your device and keep it nearby. All nearby Bluetooth devices will be listed — choose your OpenDisplay (name starts with OD).';
+    }
+    if (checkFirmware) checkFirmware.style.display = 'none';
+  } else if (b.isIOS()) {
+    if (req) {
+      req.innerHTML = [
+        '<li>Open this page in the <strong>Bluefy</strong> browser app to configure over Bluetooth</li>',
+        '<li>USB firmware install requires Chrome or Edge on a computer</li>',
+        buyLink
+      ].join('');
+    }
+    if (iosBanner) {
+      iosBanner.style.display = 'block';
+      iosBanner.innerHTML = 'Safari cannot use Web Bluetooth. ' + bluefyStoreLink
+        + ' from the App Store, then open this toolbox page in Bluefy.';
+    }
+    if (step2Hint) {
+      step2Hint.textContent = 'USB firmware install is not available on iPhone or iPad. Use Chrome or Edge on a computer.';
+    }
+    if (step3Hint) {
+      step3Hint.textContent = 'Requires the Bluefy browser app. Power on your device and keep it in range.';
+    }
+    if (checkFirmware) checkFirmware.style.display = 'none';
+  } else if (b.isFirefox()) {
+    if (req) {
+      req.innerHTML = [
+        '<li><strong>Firefox does not support Web Bluetooth.</strong> Use Chrome, Edge, or another Chromium-based browser.</li>',
+        '<li>On iPhone or iPad, use the <strong>Bluefy</strong> app for Bluetooth configuration</li>',
+        '<li>USB firmware install requires Chrome or Edge on a computer</li>',
+        buyLink
+      ].join('');
+    }
+    if (iosBanner) {
+      iosBanner.style.display = 'block';
+      iosBanner.textContent = b.firefoxWebBluetoothMessage().replace(/\n/g, ' ');
+    }
+    if (step3Hint) {
+      step3Hint.textContent = 'Bluetooth configuration is not available in Firefox. Switch to Chrome, Edge, or Bluefy (iOS).';
+    }
+  } else if (b.getWebBluetoothBlockReason() === 'chromium-disabled' && iosBanner) {
+    iosBanner.style.display = 'block';
+    iosBanner.textContent = b.chromiumWebBluetoothDisabledMessage().replace(/\n/g, ' ');
+  } else if (b.getWebBluetoothBlockReason() === 'insecure' && iosBanner) {
+    iosBanner.style.display = 'block';
+    iosBanner.textContent = 'Web Bluetooth requires HTTPS. Open this page with https:// in the address bar.';
+  }
+}
 let lastAutoInstallRedirectKeyHex = null;
 function addLog(message, type = 'info') {
   const statusDisplay = document.getElementById('statusDisplay');
@@ -1072,6 +559,8 @@ function preConnect() {
     document.getElementById("connectbutton").innerHTML = 'Connect';
     bleLib.disconnect();
   } else {
+    void (async () => {
+    if (!(await ensureWebBluetoothAvailable())) return;
     const namePrefix = document.getElementById('namePrefix').value.trim();
     if (!namePrefix) {
       addLog("Error: Device filter needed.", 'error');
@@ -1117,6 +606,7 @@ function preConnect() {
         document.getElementById("connectbutton").innerHTML = 'Connect';
       }
     });
+    })();
   }
 }
 function handleNotification(bytes, hexString, event) {
@@ -1757,6 +1247,14 @@ function renderBuilder(){
   }
   container._getVersion = ()=> parseInt(vinput.value || schema.version || 1, 10);
 }
+function comparePacketInstancesById(a, b) {
+  const pidA = parseInt(a.pid, 10) || 0;
+  const pidB = parseInt(b.pid, 10) || 0;
+  if (pidA !== pidB) return pidA - pidB;
+  const instA = parseValueToNumber(a.fields && a.fields.instance_number);
+  const instB = parseValueToNumber(b.fields && b.fields.instance_number);
+  return (instA != null ? instA : 0) - (instB != null ? instB : 0);
+}
 function collectPacketBytes(){ if(!schema) { alert('Load schema first'); return null; }
   // If in simple config mode and all selections are made, merge them into instances
   if (simpleConfigMode && simpleConfigSelections.driverBoard && 
@@ -1766,8 +1264,9 @@ function collectPacketBytes(){ if(!schema) { alert('Load schema first'); return 
   const container = document.getElementById('builderUI'); const version = container._getVersion ? container._getVersion() : schema.version||1;
   const pktBytes = [];
   if(!instances.packets || instances.packets.length===0){ if(confirm('No packets added. Build empty payload?')){} }
+  const sortedPackets = instances.packets.slice().sort(comparePacketInstancesById);
   let seq=0;
-  for(const inst of instances.packets){ const def = schema.packet_types[inst.pid]; const packet=[];
+  for(const inst of sortedPackets){ const def = schema.packet_types[inst.pid]; const packet=[];
     packet.push(seq & 0xFF);
     const pidNum = parseInt(inst.pid);
     packet.push(pidNum & 0xFF);
@@ -1993,7 +1492,17 @@ const presetMappings = {
     driverBoard: 'ee04',
     display: 'ep75-800x480',
     power: 'battery-2000'
-  }
+  },
+  '426kit': {
+    driverBoard: 'opendisplay-426-mono-kit',
+    display: 'ep426-800x480',
+    power: 'battery-2000'
+  },
+  '73kit': {
+    driverBoard: 'opendisplay-73-color-kit',
+    display: 'ep73-spectra-800x480',
+    power: 'battery-2000'
+  },
 };
 
 // Setup preset option click handlers
@@ -2052,6 +1561,7 @@ function setupPresetOptions() {
 function onDomReady() {
   setupPresetOptions();
   setDeviceFilterFromUrl();
+  adaptToolboxForPlatform();
 }
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', onDomReady);
@@ -2605,6 +2115,11 @@ async function startAutoInstall() {
 }
 function connectToBleDevice() {
   return new Promise((resolve, reject) => {
+    void ensureWebBluetoothAvailable().then((ok) => {
+    if (!ok) {
+      reject(new Error('Web Bluetooth not available'));
+      return;
+    }
     if (bleLib && bleLib.isConnected) {
       addLog('Already connected to device', 'info');
       resolve();
@@ -2660,6 +2175,7 @@ function connectToBleDevice() {
           reject(error);
         }
       });
+    });
   });
 }
 async function writeConfigToDevice() {
@@ -2977,8 +2493,8 @@ function handleDriverBoardChange() {
   toolboxDeviceConfigured = false;
   updateEspDeepSleepVisibility(selectedBoard);
   
-  // Show install button if board has install config
-  if (selectedBoard.installConfig) {
+  // Show install button if board has install config (USB install is unavailable on iOS / Bluefy)
+  if (selectedBoard.installConfig && !toolboxSkipsUsbFirmwareStep()) {
     const installType = selectedBoard.installConfig.type;
     if (installType === 'esp32' || installType === 'nrf52840') {
       installButtonContainer.style.display = 'block';
@@ -3244,7 +2760,7 @@ function updateToolboxChecklist() {
   setToolboxChecklistItem('checkDriverBoard', !!simpleConfigSelections.driverBoard);
   setToolboxChecklistItem('checkDisplay', !!simpleConfigSelections.display);
   setToolboxChecklistItem('checkPower', !!simpleConfigSelections.power);
-  setToolboxChecklistItem('checkFirmware', toolboxFirmwareInstalled);
+  setToolboxChecklistItem('checkFirmware', toolboxFirmwareInstalled || toolboxSkipsUsbFirmwareStep());
   setToolboxChecklistItem('checkConfigured', toolboxDeviceConfigured);
 }
 
@@ -3268,7 +2784,7 @@ function updateSimpleConfigStatus() {
     setSimpleConfigStatus('Done — your device is configured. Open the BLE Tester to upload images.', 'success');
   } else if (missing.length > 0) {
     setSimpleConfigStatus('Select ' + missing.join(', ') + ' to continue.', 'pending');
-  } else if (!toolboxFirmwareInstalled) {
+  } else if (!toolboxFirmwareInstalled && !toolboxSkipsUsbFirmwareStep()) {
     setSimpleConfigStatus('Hardware selected. Install firmware over USB (step 2), then configure over Bluetooth.', 'pending');
   } else {
     setSimpleConfigStatus('Ready — power on your device and click Configure over Bluetooth.', 'ready');
@@ -3691,6 +3207,97 @@ function applySimpleConfigManufacturerFields(baseFields, driverBoard, display, p
   return fields;
 }
 
+function buildSimpleConfigDataExtendedFields(driverBoard) {
+  const empty = {
+    manufacturer_name: '',
+    model_name: '',
+    serial_number: '',
+    friendly_name: '',
+    device_location: '',
+    device_id: '',
+    custom_string_1: '',
+    custom_string_2: '',
+    custom_string_3: ''
+  };
+  if (!driverBoard) return empty;
+
+  const truncate31 = (s) => {
+    const t = (s || '').trim();
+    return t.length <= 31 ? t : t.slice(0, 31);
+  };
+
+  const mfgData = driverBoard.manufacturerData || {};
+  const mfgField = schemaFieldDef('2', 'manufacturer_id');
+  const boardField = schemaFieldDef('2', 'board_type');
+  const mfgId = parseSchemaFieldInt(mfgData.manufacturer_id);
+  const mfgEntry = schemaEnumEntry(mfgField, mfgData.manufacturer_id);
+  const boardEntry = schemaConditionalEnumEntry(boardField, mfgData.manufacturer_id, mfgData.board_type);
+
+  let manufacturer_name = enumEntryLabel(mfgEntry);
+  let model_name = enumEntryLabel(boardEntry);
+
+  if (mfgId === 0 && driverBoard.name) {
+    const parts = driverBoard.name.trim().split(/\s+/);
+    manufacturer_name = parts[0] || driverBoard.name;
+    model_name = parts.slice(1).join(' ') || driverBoard.name;
+  } else if (!model_name && driverBoard.name) {
+    model_name = driverBoard.name;
+  }
+
+  return {
+    ...empty,
+    manufacturer_name: truncate31(manufacturer_name),
+    model_name: truncate31(model_name)
+  };
+}
+
+function parseSchemaFieldInt(value) {
+  if (value === null || value === undefined || value === '') return NaN;
+  if (typeof value === 'number') return value;
+  const s = String(value).trim();
+  if (s.startsWith('0x') || s.startsWith('0X')) return parseInt(s, 16);
+  return parseInt(s, 10);
+}
+
+function schemaPacketDef(pid) {
+  if (!schema || !schema.packet_types) return null;
+  const key = String(pid);
+  return schema.packet_types[key]
+    || schema.packet_types['0x' + parseInt(key, 10).toString(16)]
+    || schema.packet_types[parseInt(key, 10)];
+}
+
+function schemaFieldDef(packetId, fieldName) {
+  const pdef = schemaPacketDef(packetId);
+  if (!pdef || !pdef.fields) return null;
+  return pdef.fields.find((f) => f.name === fieldName) || null;
+}
+
+function schemaEnumEntry(fieldDef, value) {
+  if (!fieldDef || !fieldDef.enum) return null;
+  const num = parseSchemaFieldInt(value);
+  if (isNaN(num)) return null;
+  return fieldDef.enum[num] || fieldDef.enum[String(num)] || null;
+}
+
+function schemaConditionalEnumEntry(fieldDef, dependsOnValue, value) {
+  if (!fieldDef || !fieldDef.conditional_enum || !fieldDef.conditional_enum.values) return null;
+  const depNum = parseSchemaFieldInt(dependsOnValue);
+  const valNum = parseSchemaFieldInt(value);
+  if (isNaN(depNum) || isNaN(valNum)) return null;
+  const bucket = fieldDef.conditional_enum.values[depNum]
+    || fieldDef.conditional_enum.values[String(depNum)];
+  if (!bucket) return null;
+  return bucket[valNum] || bucket[String(valNum)] || null;
+}
+
+function enumEntryLabel(entry) {
+  if (!entry) return '';
+  if (entry.description) return entry.description;
+  if (entry.name) return entry.name;
+  return '';
+}
+
 function mergeSimpleConfigToFull() {
   if (!schema) {
     alert('Schema not loaded. Cannot merge config.');
@@ -3731,6 +3338,18 @@ function mergeSimpleConfigToFull() {
         fields: manufacturerFields
       };
       instances.packets.push(manufacturerDataInst);
+    }
+
+    const dataExtendedFields = buildSimpleConfigDataExtendedFields(simpleConfigSelections.driverBoard);
+    const existingDataExtended = instances.packets.find(p => p.pid === '44');
+    if (existingDataExtended) {
+      existingDataExtended.fields = dataExtendedFields;
+    } else {
+      instances.packets.push({
+        uid: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        pid: '44',
+        fields: dataExtendedFields
+      });
     }
   }
   
