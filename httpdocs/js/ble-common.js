@@ -414,15 +414,29 @@ class OpenDisplayBLE {
     const discoveryFilters = [mfgFilter, serviceFilter, ...nameFilters];
 
     if (this.usesUnfilteredBleScan()) {
+      // acceptAllDevices lets the user *select* any device, but GATT services
+      // are still only accessible if declared in optionalServices — without it,
+      // getPrimaryService(this.serviceUUID) rejects with a SecurityError right
+      // after selection.
       return [{
-        acceptAllDevices: true
+        acceptAllDevices: true,
+        optionalServices: [serviceUuid]
       }];
     }
 
-    return [{
-      optionalServices: [serviceUuid],
-      filters: discoveryFilters
-    }];
+    return [
+      {
+        optionalServices: [serviceUuid],
+        filters: discoveryFilters
+      },
+      {
+        // Fallback: some older Chromium builds reject a manufacturerData filter
+        // with a "payload ... parse" error. Retry with name/service-only filters
+        // (this is the attempt the retry loop in requestBleDevice falls back to).
+        optionalServices: [serviceUuid],
+        filters: [serviceFilter, ...nameFilters]
+      }
+    ];
   }
 
   isRequestDevicePayloadError(error) {
