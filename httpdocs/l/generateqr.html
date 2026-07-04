@@ -285,7 +285,11 @@
       var correctLevelMap = { L: QRCode.CorrectLevel.L, M: QRCode.CorrectLevel.M, Q: QRCode.CorrectLevel.Q, H: QRCode.CorrectLevel.H };
 
       function getQRModel() {
-        return qr && qr._oQRCode ? qr._oQRCode : null;
+        // _oQRCode is assigned before make() runs, so on a failed render it is a
+        // half-built model with moduleCount 0. Require a rendered model so the
+        // download buttons stay disabled and never emit a degenerate 0x0 file.
+        var m = qr && qr._oQRCode ? qr._oQRCode : null;
+        return m && m.getModuleCount && m.getModuleCount() > 0 ? m : null;
       }
 
       function downloadSVG() {
