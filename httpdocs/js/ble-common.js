@@ -2800,7 +2800,24 @@ class OpenDisplayBLE {
     }
     return crc & 0xFFFF;
   }
-  
+
+  /**
+   * CRC-16/CCITT-FALSE over an outer config container body, with the first
+   * two (length) bytes treated as zero. Matches the toolbox writer and the
+   * firmware's config_toolbox_outer_crc16: the toolbox computes the CRC while
+   * the length bytes are still 0,0 and writes the real length afterward, so
+   * read-back must zero those bytes to agree. Advisory only.
+   */
+  crc16ccittOuter(body) {
+    const b = body instanceof Uint8Array ? body : new Uint8Array(body);
+    if (b.length < 2) return this.crc16ccitt(b);
+    const tmp = new Uint8Array(b.length);
+    tmp[0] = 0;
+    tmp[1] = 0;
+    tmp.set(b.subarray(2), 2);
+    return this.crc16ccitt(tmp);
+  }
+
   /**
    * Convert number to little-endian byte array
    */
@@ -2934,7 +2951,7 @@ class OpenDisplayBLE {
     
     const crcGiven = view[view.length - 2] | (view[view.length - 1] << 8);
     const body = view.slice(0, view.length - 2);
-    const crcCheck = this.crc16ccitt(body);
+    const crcCheck = this.crc16ccittOuter(body);
     
     const result = {
       length: len,

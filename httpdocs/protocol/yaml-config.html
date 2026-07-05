@@ -386,7 +386,7 @@ table code {
       <tr>
         <td><code>crc</code></td>
         <td>2 bytes</td>
-        <td>CRC16-CCITT checksum (excluding CRC field)</td>
+        <td>CRC-16/CCITT-FALSE (init 0xFFFF, poly 0x1021) over the container excluding the trailing CRC field, with the 2 length bytes treated as zero</td>
       </tr>
     </table>
 

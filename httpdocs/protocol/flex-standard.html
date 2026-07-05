@@ -108,7 +108,8 @@
     </p>
     <p class="intro-text">
       Configuration is transferred as an <strong>outer packet</strong>: 2-byte length, 1-byte version, a sequence of 
-      inner packets, then CRC16-CCITT. Each inner packet has a sequential <code>number</code>, a type <code>id</code>, 
+      inner packets, then a 2-byte CRC. The CRC is CRC-16/CCITT-FALSE (init 0xFFFF, poly 0x1021) computed over the
+      container excluding the trailing CRC, with the 2 length bytes treated as zero. Each inner packet has a sequential <code>number</code>, a type <code>id</code>,
       and a typed payload. Full field definitions: <a href="yaml-config.html" style="color: var(--accent);">YAML configuration reference</a>.
     </p>
     <p class="intro-text">
