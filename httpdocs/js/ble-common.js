@@ -398,18 +398,26 @@ class OpenDisplayBLE {
   }
   
   /**
-   * iOS WebKit (Bluefy) cannot reliably match name/service/manufacturer filters
-   * against ESP/nRF advertising packets — show every nearby device instead.
+   * Bluefy's BLE engine is the only practical Web Bluetooth on iOS (mobile
+   * Safari has none, so it never reaches this code). It matches name and
+   * manufacturer-data filters against our advertising packets, but not
+   * service-UUID-only filters (ESP32 drops the 128-bit UUID from the 31-byte
+   * primary packet), so its requestDevice attempts are built specially.
    */
-  usesUnfilteredBleScan() {
+  usesBluefyBleEngine() {
     return !!(typeof window !== 'undefined'
       && window.OpenDisplayBrowser
-      && window.OpenDisplayBrowser.isIOS()
+      && window.OpenDisplayBrowser.isBluefy()
       && window.OpenDisplayBrowser.isWebBluetoothSupported());
   }
 
+  // Back-compat aliases for the previous names.
+  usesUnfilteredBleScan() {
+    return this.usesBluefyBleEngine();
+  }
+
   usesWebKitBleRequestDeviceWorkaround() {
-    return this.usesUnfilteredBleScan();
+    return this.usesBluefyBleEngine();
   }
 
   buildRequestDeviceOptionAttempts(prefix) {
@@ -427,15 +435,26 @@ class OpenDisplayBLE {
     const isBroadDiscovery =
       effectivePrefixes.length === 1 && effectivePrefixes[0] === 'OD';
 
-    if (this.usesUnfilteredBleScan()) {
-      // acceptAllDevices lets the user *select* any device, but GATT services
-      // are still only accessible if declared in optionalServices — without it,
-      // getPrimaryService(this.serviceUUID) rejects with a SecurityError right
-      // after selection.
-      return [{
-        acceptAllDevices: true,
-        optionalServices: [serviceUuid]
-      }];
+    if (this.usesBluefyBleEngine()) {
+      // A device MUST match the (user-configurable, default "OD") name prefix —
+      // Bluefy matches namePrefix against the advertised Complete Local Name.
+      // We deliberately do NOT OR in the manufacturer-id / service filters here:
+      // those match every OpenDisplay device and would defeat a specific prefix,
+      // putting unrelated displays back in the chooser. optionalServices is
+      // required in every attempt or getPrimaryService() rejects with a
+      // SecurityError right after selection.
+      return [
+        {
+          optionalServices: [serviceUuid],
+          filters: nameFilters
+        },
+        {
+          // Escape hatch: only reached if Bluefy rejects the filter set
+          // outright (validation/not-supported), never on an empty chooser.
+          acceptAllDevices: true,
+          optionalServices: [serviceUuid]
+        }
+      ];
     }
 
     if (isBroadDiscovery) {
@@ -471,6 +490,19 @@ class OpenDisplayBLE {
     return msg.includes('payload') && msg.includes('pars');
   }
 
+  // A rejection from requestDevice() caused by the *options* (an unsupported or
+  // malformed filter), not by the user or the scan. These are thrown during
+  // option validation — before the chooser opens and before the user gesture is
+  // consumed — so it is safe to advance to a simpler fallback attempt. A user
+  // cancel / empty chooser is NotFoundError/AbortError and must NOT match here,
+  // or we would re-prompt (and burn the gesture) in a loop.
+  isRequestDeviceOptionsError(error) {
+    if (!error) return false;
+    if (error.name === 'TypeError' || error.name === 'NotSupportedError') return true;
+    const msg = (error.message || '').toLowerCase();
+    return msg.includes('filter') || msg.includes('not supported') || msg.includes('manufacturerdata');
+  }
+
   async requestBleDevice(prefix) {
     const attempts = this.buildRequestDeviceOptionAttempts(prefix);
     let lastError = null;
@@ -484,7 +516,8 @@ class OpenDisplayBLE {
         return await navigator.bluetooth.requestDevice(deviceOptions);
       } catch (error) {
         lastError = error;
-        if (!this.isRequestDevicePayloadError(error) || i === attempts.length - 1) {
+        const canRetry = this.isRequestDevicePayloadError(error) || this.isRequestDeviceOptionsError(error);
+        if (!canRetry || i === attempts.length - 1) {
           throw error;
         }
         this.log(`requestDevice attempt ${i + 1} failed (${error.message}), retrying...`, 'warning');
