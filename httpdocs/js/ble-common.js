@@ -405,13 +405,18 @@ class OpenDisplayBLE {
 
   buildRequestDeviceOptionAttempts(prefix) {
     const prefixes = prefix.split(',').map(p => p.trim()).filter(p => p);
-    const nameFilters = (prefixes.length ? prefixes : ['OD']).map(p => ({ namePrefix: p }));
+    const effectivePrefixes = prefixes.length ? prefixes : ['OD'];
+    const nameFilters = effectivePrefixes.map(p => ({ namePrefix: p }));
     const serviceUuid = this.serviceUUID;
     const mfgFilter = {
       manufacturerData: [{ companyIdentifier: OPENDISPLAY_MSD_COMPANY_ID }]
     };
     const serviceFilter = { services: [serviceUuid] };
-    const discoveryFilters = [mfgFilter, serviceFilter, ...nameFilters];
+    // Web Bluetooth ORs separate filter objects. MSD/service-only entries match
+    // every OpenDisplay device, so a specific name prefix must not share the
+    // filters array with them — only the default "OD" scan uses broad OR discovery.
+    const isBroadDiscovery =
+      effectivePrefixes.length === 1 && effectivePrefixes[0] === 'OD';
 
     if (this.usesUnfilteredBleScan()) {
       // acceptAllDevices lets the user *select* any device, but GATT services
@@ -424,17 +429,30 @@ class OpenDisplayBLE {
       }];
     }
 
+    if (isBroadDiscovery) {
+      return [
+        {
+          optionalServices: [serviceUuid],
+          filters: [mfgFilter, serviceFilter, ...nameFilters]
+        },
+        {
+          // Fallback: some older Chromium builds reject a manufacturerData filter
+          // with a "payload ... parse" error. Retry with name/service-only filters.
+          optionalServices: [serviceUuid],
+          filters: [serviceFilter, ...nameFilters]
+        }
+      ];
+    }
+
     return [
       {
         optionalServices: [serviceUuid],
-        filters: discoveryFilters
+        filters: nameFilters
       },
       {
-        // Fallback: some older Chromium builds reject a manufacturerData filter
-        // with a "payload ... parse" error. Retry with name/service-only filters
-        // (this is the attempt the retry loop in requestBleDevice falls back to).
+        // AND service + name within each filter (still OR across comma-separated prefixes).
         optionalServices: [serviceUuid],
-        filters: [serviceFilter, ...nameFilters]
+        filters: nameFilters.map(nf => ({ ...serviceFilter, ...nf }))
       }
     ];
   }
